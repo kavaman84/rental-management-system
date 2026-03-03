@@ -199,7 +199,7 @@ app.get('/rooms', (req, res) => {
             return res.status(500).send('服务器错误');
         }
 
-        res.render('rooms', { rooms });
+        res.render('rooms', { rooms, username: req.session.username });
     });
 });
 
@@ -227,7 +227,7 @@ app.get('/rooms/:id', (req, res) => {
                 return res.status(500).send('服务器错误');
             }
 
-            res.render('room-detail', { room, readings });
+            res.render('room-detail', { room, readings, username: req.session.username });
         });
     });
 });
@@ -286,7 +286,7 @@ app.get('/receipts', (req, res) => {
                 });
             });
         }
-    );
+    });
 });
 
 // 生成月收据
