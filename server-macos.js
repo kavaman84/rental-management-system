@@ -108,6 +108,42 @@ app.get('/login', (req, res) => {
 
 // 登录处理
 app.post('/login', (req, res) => {
+// 仪表板
+app.get('/dashboard', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    db.all('SELECT * FROM rooms ORDER BY room_number', (err, rooms) => {
+        if (err) {
+            console.error('获取房间列表错误:', err);
+            return res.status(500).send('服务器错误');
+        }
+
+        db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
+            const receiptStats = result;
+
+            db.get('SELECT COUNT(*) as unpaid FROM receipts WHERE status = "pending"', (err, result) => {
+                const unpaidCount = result.unpaid;
+
+                db.all('SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id ORDER BY r.receipt_month DESC, r.room_id ASC LIMIT 5', (err, receipts) => {
+                    if (err) {
+                        console.error('获取收据列表错误:', err);
+                        return res.status(500).send('服务器错误');
+                    }
+
+                    res.render('dashboard', {
+                        rooms,
+                        receipts,
+                        receiptStats,
+                        unpaidCount,
+                        username: req.session.username
+                    });
+                });
+            });
+        });
+    });
+});
     const { username, password } = req.body;
 
     db.get('SELECT * FROM admins WHERE username = ?', [username], (err, admin) => {
