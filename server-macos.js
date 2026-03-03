@@ -161,17 +161,26 @@ app.get('/dashboard', (req, res) => {
             return res.status(500).send('服务器错误');
         }
 
-        db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
-            const receiptStats = result;
+        // 获取最近的收据
+        db.all('SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id ORDER BY r.receipt_month DESC, r.room_id ASC LIMIT 5', (err, receipts) => {
+            if (err) {
+                console.error('获取收据列表错误:', err);
+                return res.status(500).send('服务器错误');
+            }
 
-            db.get('SELECT COUNT(*) as unpaid FROM receipts WHERE status = "pending"', (err, result) => {
-                const unpaidCount = result.unpaid;
+            db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
+                const receiptStats = result;
 
-                res.render('dashboard', {
-                    rooms,
-                    receiptStats,
-                    unpaidCount,
-                    username: req.session.username
+                db.get('SELECT COUNT(*) as unpaid FROM receipts WHERE status = "pending"', (err, result) => {
+                    const unpaidCount = result.unpaid;
+
+                    res.render('dashboard', {
+                        rooms,
+                        receipts,
+                        receiptStats,
+                        unpaidCount,
+                        username: req.session.username
+                    });
                 });
             });
         });
