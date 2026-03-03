@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  rental-system:
+    build: .
+    container_name: rental-system
+    ports:
+      - "4000:4000"
+    volumes:
+      # 数据持久化 - 保存数据库文件
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - rental-network
+
+networks:
+  rental-network:
+    driver: bridge

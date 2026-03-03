@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仪表板 - 出租屋租赁管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>出租屋租赁管理系统</h1>
+            <div class="user-info">
+                <span>欢迎, <%= username %></span>
+                <a href="/logout" class="btn btn-danger">退出</a>
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>总收据数</h3>
+                <p class="stat-number"><%= receiptStats.total %></p>
+            </div>
+            <div class="stat-card unpaid">
+                <h3>未支付</h3>
+                <p class="stat-number"><%= unpaidCount %></p>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <h2>快速操作</h2>
+            <div class="action-buttons">
+                <a href="/rooms" class="btn btn-primary">管理房间</a>
+                <a href="/receipts" class="btn btn-primary">收据管理</a>
+            </div>
+        </div>
+
+        <div class="recent-receipts">
+            <h2>最近收据</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>房号</th>
+                        <th>月份</th>
+                        <th>应收金额</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (receipts && receipts.length > 0) { %>
+                        <% receipts.slice(0, 5).forEach(receipt => { %>
+                            <tr>
+                                <td><%= receipt.room_number %></td>
+                                <td><%= receipt.receipt_month %></td>
+                                <td>¥<%= receipt.total_amount.toFixed(2) %></td>
+                                <td><%= receipt.status === 'paid' ? '已支付' : '未支付' %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="4" style="text-align: center;">暂无收据</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

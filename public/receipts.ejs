@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收据管理 - 出租屋租赁管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>出租屋租赁管理系统</h1>
+            <div class="user-info">
+                <span>欢迎, <%= username %></span>
+                <a href="/logout" class="btn btn-danger">退出</a>
+            </div>
+        </header>
+
+        <div class="page-header">
+            <h2>收据管理</h2>
+            <a href="/" class="btn btn-secondary">返回首页</a>
+        </div>
+
+        <div class="generate-receipt">
+            <h3>生成月收据</h3>
+            <form id="generateReceiptForm" class="form">
+                <div class="form-group">
+                    <label for="room_id">选择房间</label>
+                    <select id="room_id" name="room_id" required>
+                        <option value="">请选择房间</option>
+                        <% rooms.forEach(room => { %>
+                            <option value="<%= room.id %>"><%= room.room_number %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="receipt_month">收据月份</label>
+                    <input type="month" id="receipt_month" name="receipt_month" required>
+                </div>
+                <button type="submit" class="btn btn-primary">生成收据</button>
+            </form>
+        </div>
+
+        <div class="receipts-list">
+            <h3>收据列表</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>房号</th>
+                        <th>月份</th>
+                        <th>月租金</th>
+                        <th>税费</th>
+                        <th>电费</th>
+                        <th>水费</th>
+                        <th>总金额</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (receipts && receipts.length > 0) { %>
+                        <% receipts.forEach(receipt => { %>
+                            <tr>
+                                <td><%= receipt.room_number %></td>
+                                <td><%= receipt.receipt_month %></td>
+                                <td>¥<%= receipt.monthly_rent.toFixed(2) %></td>
+                                <td>¥<%= receipt.tax_amount.toFixed(2) %></td>
+                                <td>¥<%= receipt.electricity_amount.toFixed(2) %></td>
+                                <td>¥<%= receipt.water_amount.toFixed(2) %></td>
+                                <td class="total">¥<%= receipt.total_amount.toFixed(2) %></td>
+                                <td>
+                                    <span class="status <%= receipt.status %>">
+                                        <%= receipt.status === 'paid' ? '已支付' : '未支付' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (receipt.status === 'pending') { %>
+                                        <button onclick="payReceipt(<%= receipt.id %>)" class="btn btn-small btn-success">支付</button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="9" style="text-align: center;">暂无收据</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+
+            <% if (totalPages > 1) { %>
+                <div class="pagination">
+                    <% if (currentPage > 1) { %>
+                        <a href="?page=<%= currentPage - 1 %>" class="btn btn-small">上一页</a>
+                    <% } %>
+
+                    <span class="page-info">第 <%= currentPage %> 页 / 共 <%= totalPages %> 页</span>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %>" class="btn btn-small">下一页</a>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

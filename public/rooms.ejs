@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>房间管理 - 出租屋租赁管理系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>出租屋租赁管理系统</h1>
+            <div class="user-info">
+                <span>欢迎, <%= username %></span>
+                <a href="/logout" class="btn btn-danger">退出</a>
+            </div>
+        </header>
+
+        <div class="page-header">
+            <h2>房间管理</h2>
+            <a href="/" class="btn btn-secondary">返回首页</a>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>房号</th>
+                    <th>月租金</th>
+                    <th>税费单价</th>
+                    <th>电费单价</th>
+                    <th>水费单价</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% rooms.forEach(room => { %>
+                    <tr>
+                        <td><%= room.room_number %></td>
+                        <td>¥<%= room.monthly_rent.toFixed(2) %></td>
+                        <td><%= (room.tax_rate * 100).toFixed(2) %>%</td>
+                        <td>¥<%= room.electricity_rate.toFixed(2) %>/度</td>
+                        <td>¥<%= room.water_rate.toFixed(2) %>/吨</td>
+                        <td>
+                            <a href="/rooms/<%= room.id %>" class="btn btn-small">详情</a>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
