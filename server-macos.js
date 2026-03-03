@@ -3,30 +3,11 @@ const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const path = require('path');
 const session = require('express-session');
-const os = require('os');
 const app = express();
-const PORT = 3000;
-
-// 获取用户的主目录
-const homeDir = os.homedir();
-const appDir = path.join(homeDir, 'Documents', 'rental-system');
-const dbPath = path.join(appDir, 'rental_system.db');
-
-// 确保应用目录存在
-const fs = require('fs');
-if (!fs.existsSync(appDir)) {
-    fs.mkdirSync(appDir, { recursive: true });
-    console.log('创建应用目录:', appDir);
-}
+const PORT = 4000;
 
 // 数据库连接
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('数据库连接错误:', err);
-    } else {
-        console.log('数据库连接成功:', dbPath);
-    }
-});
+const db = new sqlite3.Database('./rental_system.db');
 
 // 初始化数据库
 db.serialize(() => {
@@ -161,26 +142,17 @@ app.get('/dashboard', (req, res) => {
             return res.status(500).send('服务器错误');
         }
 
-        // 获取最近的收据
-        db.all('SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id ORDER BY r.receipt_month DESC, r.room_id ASC LIMIT 5', (err, receipts) => {
-            if (err) {
-                console.error('获取收据列表错误:', err);
-                return res.status(500).send('服务器错误');
-            }
+        db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
+            const receiptStats = result;
 
-            db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
-                const receiptStats = result;
+            db.get('SELECT COUNT(*) as unpaid FROM receipts WHERE status = "pending"', (err, result) => {
+                const unpaidCount = result.unpaid;
 
-                db.get('SELECT COUNT(*) as unpaid FROM receipts WHERE status = "pending"', (err, result) => {
-                    const unpaidCount = result.unpaid;
-
-                    res.render('dashboard', {
-                        rooms,
-                        receipts,
-                        receiptStats,
-                        unpaidCount,
-                        username: req.session.username
-                    });
+                res.render('dashboard', {
+                    rooms,
+                    receiptStats,
+                    unpaidCount,
+                    username: req.session.username
                 });
             });
         });
@@ -199,7 +171,7 @@ app.get('/rooms', (req, res) => {
             return res.status(500).send('服务器错误');
         }
 
-        res.render('rooms', { rooms, username: req.session.username });
+        res.render('rooms', { rooms });
     });
 });
 
@@ -227,7 +199,7 @@ app.get('/rooms/:id', (req, res) => {
                 return res.status(500).send('服务器错误');
             }
 
-            res.render('room-detail', { room, readings, username: req.session.username });
+            res.render('room-detail', { room, readings });
         });
     });
 });
@@ -286,7 +258,7 @@ app.get('/receipts', (req, res) => {
                 });
             });
         }
-    });
+    );
 });
 
 // 生成月收据
@@ -428,12 +400,9 @@ app.use((req, res) => {
 
 // 启动服务器
 app.listen(PORT, () => {
-    console.log('================================');
-    console.log('服务器运行在 http://localhost:' + PORT);
-    console.log('================================');
-    console.log('管理员账号: admin / admin123');
-    console.log('================================');
-    console.log('应用目录:', appDir);
-    console.log('数据库文件:', dbPath);
-    console.log('================================');
+    console.log(`================================`);
+    console.log(`服务器运行在 http://localhost:${PORT}`);
+    console.log(`================================`);
+    console.log(`管理员账号: admin / admin123`);
+    console.log(`================================`);
 });
