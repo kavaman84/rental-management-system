@@ -108,7 +108,6 @@ app.get('/login', (req, res) => {
 
 // 登录处理
 app.post('/login', (req, res) => {
-
 // 仪表板
 app.get('/dashboard', (req, res) => {
     if (!req.session.adminId) {
@@ -145,7 +144,30 @@ app.get('/dashboard', (req, res) => {
         });
     });
 });
+    const { username, password } = req.body;
+
+    db.get('SELECT * FROM admins WHERE username = ?', [username], (err, admin) => {
+        if (err) {
+            console.error('登录错误:', err);
+            return res.status(500).send('服务器错误');
+        }
+
+        if (!admin) {
+            return res.render('login', { error: '用户名或密码错误' });
+        }
+
+        if (admin.password === password) {
+            req.session.adminId = admin.id;
+            req.session.username = admin.username;
+            res.redirect('/dashboard');
+        } else {
+            res.render('login', { error: '用户名或密码错误' });
+        }
+    });
+});
+
 // 仪表板
+app.get('/dashboard', (req, res) => {
     if (!req.session.adminId) {
         return res.redirect('/login');
     }
