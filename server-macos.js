@@ -167,6 +167,22 @@ app.get('/dashboard', (req, res) => {
     });
 });
 
+// 房间管理
+app.get('/rooms', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    db.all('SELECT * FROM rooms ORDER BY room_number', (err, rooms) => {
+        if (err) {
+            console.error('获取房间列表错误:', err);
+            return res.status(500).send('服务器错误');
+        }
+
+        res.render('rooms', { rooms, username: req.session.username });
+    });
+});
+
 // 更新房间信息
 app.post('/rooms/:id/update', (req, res) => {
     if (!req.session.adminId) {
@@ -200,28 +216,36 @@ app.get('/receipts', (req, res) => {
     const limit = 10;
     const offset = (page - 1) * limit;
 
-    db.all(
-        'SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id ORDER BY r.receipt_month DESC, r.room_id ASC LIMIT ? OFFSET ?',
-        [limit, offset],
-        (err, receipts) => {
-            if (err) {
-                console.error('获取收据列表错误:', err);
-                return res.status(500).send('服务器错误');
-            }
-
-            db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
-                const total = result.total;
-                const totalPages = Math.ceil(total / limit);
-
-                res.render('receipts', {
-                    receipts,
-                    currentPage: page,
-                    totalPages,
-                    username: req.session.username
-                });
-            });
+    db.all('SELECT * FROM rooms ORDER BY room_number', (err, rooms) => {
+        if (err) {
+            console.error('获取房间列表错误:', err);
+            return res.status(500).send('服务器错误');
         }
-    );
+
+        db.all(
+            'SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id ORDER BY r.receipt_month DESC, r.room_id ASC LIMIT ? OFFSET ?',
+            [limit, offset],
+            (err, receipts) => {
+                if (err) {
+                    console.error('获取收据列表错误:', err);
+                    return res.status(500).send('服务器错误');
+                }
+
+                db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
+                    const total = result.total;
+                    const totalPages = Math.ceil(total / limit);
+
+                    res.render('receipts', {
+                        receipts,
+                        currentPage: page,
+                        totalPages,
+                        username: req.session.username,
+                        rooms
+                    });
+                });
+            }
+        );
+    });
 });
 
 // 生成月收据
