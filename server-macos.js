@@ -251,11 +251,11 @@ app.post('/rooms/:id/update', (req, res) => {
     }
 
     const roomId = req.params.id;
-    const { monthly_rent, electricity_rate, water_rate } = req.body;
+    const { room_number, monthly_rent, electricity_rate, water_rate } = req.body;
 
     db.run(
-        'UPDATE rooms SET monthly_rent = ?, electricity_rate = ?, water_rate = ? WHERE id = ?',
-        [monthly_rent, electricity_rate, water_rate, roomId],
+        'UPDATE rooms SET room_number = ?, monthly_rent = ?, electricity_rate = ?, water_rate = ? WHERE id = ?',
+        [room_number, monthly_rent, electricity_rate, water_rate, roomId],
         (err) => {
             if (err) {
                 console.error('更新房间信息错误:', err);
