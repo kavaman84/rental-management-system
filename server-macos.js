@@ -16,7 +16,6 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         room_number TEXT NOT NULL UNIQUE,
         monthly_rent REAL NOT NULL,
-        tax_rate REAL DEFAULT 0,
         electricity_rate REAL DEFAULT 0,
         water_rate REAL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -183,6 +182,68 @@ app.get('/rooms', (req, res) => {
     });
 });
 
+// 添加房间
+app.post('/rooms/add', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const { room_number, monthly_rent, electricity_rate, water_rate } = req.body;
+
+    db.run(
+        'INSERT INTO rooms (room_number, monthly_rent, electricity_rate, water_rate) VALUES (?, ?, ?, ?)',
+        [room_number, monthly_rent, electricity_rate, water_rate],
+        (err) => {
+            if (err) {
+                console.error('添加房间错误:', err);
+                return res.status(500).json({ success: false, message: '添加失败' });
+            }
+
+            res.json({ success: true, message: '添加成功' });
+        }
+    );
+});
+
+// 删除房间
+app.post('/rooms/:id/delete', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const roomId = req.params.id;
+
+    db.run('DELETE FROM rooms WHERE id = ?', [roomId], (err) => {
+        if (err) {
+            console.error('删除房间错误:', err);
+            return res.status(500).json({ success: false, message: '删除失败' });
+        }
+
+        res.json({ success: true, message: '删除成功' });
+    });
+});
+
+// 获取单个房间详情
+app.get('/rooms/:id', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const roomId = req.params.id;
+
+    db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
+        if (err) {
+            console.error('获取房间详情错误:', err);
+            return res.status(500).send('服务器错误');
+        }
+
+        if (!room) {
+            return res.status(404).send('房间不存在');
+        }
+
+        res.json(room);
+    });
+});
+
 // 更新房间信息
 app.post('/rooms/:id/update', (req, res) => {
     if (!req.session.adminId) {
@@ -190,11 +251,11 @@ app.post('/rooms/:id/update', (req, res) => {
     }
 
     const roomId = req.params.id;
-    const { monthly_rent, tax_rate, electricity_rate, water_rate } = req.body;
+    const { monthly_rent, electricity_rate, water_rate } = req.body;
 
     db.run(
-        'UPDATE rooms SET monthly_rent = ?, tax_rate = ?, electricity_rate = ?, water_rate = ? WHERE id = ?',
-        [monthly_rent, tax_rate, electricity_rate, water_rate, roomId],
+        'UPDATE rooms SET monthly_rent = ?, electricity_rate = ?, water_rate = ? WHERE id = ?',
+        [monthly_rent, electricity_rate, water_rate, roomId],
         (err) => {
             if (err) {
                 console.error('更新房间信息错误:', err);

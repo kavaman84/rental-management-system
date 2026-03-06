@@ -18,7 +18,7 @@
 
         <div class="page-header">
             <h2>房间管理</h2>
-            <a href="/" class="btn btn-secondary">返回首页</a>
+            <a href="/dashboard" class="btn btn-secondary">返回首页</a>
         </div>
 
         <table class="table">
@@ -26,7 +26,6 @@
                 <tr>
                     <th>房号</th>
                     <th>月租金</th>
-                    <th>税费单价</th>
                     <th>电费单价</th>
                     <th>水费单价</th>
                     <th>操作</th>
@@ -37,16 +36,43 @@
                     <tr>
                         <td><%= room.room_number %></td>
                         <td>¥<%= room.monthly_rent.toFixed(2) %></td>
-                        <td><%= (room.tax_rate * 100).toFixed(2) %>%</td>
                         <td>¥<%= room.electricity_rate.toFixed(2) %>/度</td>
                         <td>¥<%= room.water_rate.toFixed(2) %>/吨</td>
                         <td>
+                            <button onclick="editRoom(<%= room.id %>)" class="btn btn-small">编辑</button>
                             <a href="/rooms/<%= room.id %>" class="btn btn-small">详情</a>
                         </td>
                     </tr>
                 <% }); %>
             </tbody>
         </table>
+
+        <div class="modal" id="editRoomModal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h3>编辑房间</h3>
+                <form id="editRoomForm">
+                    <input type="hidden" id="edit_room_id">
+                    <div class="form-group">
+                        <label>房号</label>
+                        <input type="text" id="edit_room_number" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>月租金</label>
+                        <input type="number" id="edit_monthly_rent" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>电费单价</label>
+                        <input type="number" id="edit_electricity_rate" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>水费单价</label>
+                        <input type="number" id="edit_water_rate" step="0.01" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script src="/js/app.js"></script>
