@@ -20,7 +20,8 @@ document.getElementById('addRoomForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            window.location.reload();
+            addRoomToTable(formData);
+            closeAddRoomModal();
         } else {
             alert(data.message);
         }
@@ -30,6 +31,35 @@ document.getElementById('addRoomForm').addEventListener('submit', function(e) {
         alert('添加失败，请重试');
     });
 });
+
+// 显示添加房间模态框
+function showAddRoomModal() {
+    document.getElementById('addRoomModal').style.display = 'block';
+}
+
+// 关闭添加房间模态框
+function closeAddRoomModal() {
+    document.getElementById('addRoomModal').style.display = 'none';
+    document.getElementById('addRoomForm').reset();
+}
+
+// 将新房间添加到表格
+function addRoomToTable(room) {
+    const tableBody = document.getElementById('roomsTableBody');
+    const newRow = document.createElement('tr');
+    newRow.setAttribute('data-room-id', room.room_number);
+    newRow.innerHTML = `
+        <td>${room.room_number}</td>
+        <td>¥${parseFloat(room.monthly_rent).toFixed(2)}</td>
+        <td>¥${parseFloat(room.electricity_rate).toFixed(2)}/度</td>
+        <td>¥${parseFloat(room.water_rate).toFixed(2)}/吨</td>
+        <td>
+            <button onclick="editRoom('${room.room_number}')" class="btn btn-small">编辑</button>
+            <a href="/rooms/${room.room_number}" class="btn btn-small">详情</a>
+        </td>
+    `;
+    tableBody.appendChild(newRow);
+}
 
 // 删除房间
 function deleteRoom(roomId) {
@@ -44,7 +74,10 @@ function deleteRoom(roomId) {
         .then(data => {
             if (data.success) {
                 alert(data.message);
-                window.location.reload();
+                const row = document.querySelector(`tr[data-room-id="${roomId}"]`);
+                if (row) {
+                    row.remove();
+                }
             } else {
                 alert(data.message);
             }
@@ -77,6 +110,7 @@ function editRoom(roomId) {
 // 关闭模态框
 function closeModal() {
     document.getElementById('editRoomModal').style.display = 'none';
+    document.getElementById('editRoomForm').reset();
 }
 
 // 更新房间信息
@@ -90,6 +124,7 @@ document.getElementById('editRoomForm').addEventListener('submit', function(e) {
     };
 
     const roomId = document.getElementById('edit_room_id').value;
+    const roomNumber = document.getElementById('edit_room_number').value;
 
     fetch(`/rooms/${roomId}/update`, {
         method: 'POST',
@@ -102,8 +137,8 @@ document.getElementById('editRoomForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             alert(data.message);
+            updateRoomInTable(roomId, roomNumber, formData);
             closeModal();
-            window.location.reload();
         } else {
             alert(data.message);
         }
@@ -113,6 +148,17 @@ document.getElementById('editRoomForm').addEventListener('submit', function(e) {
         alert('更新失败，请重试');
     });
 });
+
+// 更新表格中的房间信息
+function updateRoomInTable(roomId, roomNumber, formData) {
+    const row = document.querySelector(`tr[data-room-id="${roomId}"]`);
+    if (row) {
+        row.cells[0].textContent = roomNumber;
+        row.cells[1].textContent = `¥${parseFloat(formData.monthly_rent).toFixed(2)}`;
+        row.cells[2].textContent = `¥${parseFloat(formData.electricity_rate).toFixed(2)}/度`;
+        row.cells[3].textContent = `¥${parseFloat(formData.water_rate).toFixed(2)}/吨`;
+    }
+}
 
 // 生成收据
 document.getElementById('generateReceiptForm').addEventListener('submit', function(e) {
@@ -183,8 +229,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 点击模态框外部关闭
 window.onclick = function(event) {
-    const modal = document.getElementById('editRoomModal');
-    if (event.target == modal) {
+    const addModal = document.getElementById('addRoomModal');
+    const editModal = document.getElementById('editRoomModal');
+    if (event.target == addModal) {
+        closeAddRoomModal();
+    }
+    if (event.target == editModal) {
         closeModal();
     }
 }

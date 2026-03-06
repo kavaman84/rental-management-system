@@ -18,7 +18,10 @@
 
         <div class="page-header">
             <h2>房间管理</h2>
-            <a href="/dashboard" class="btn btn-secondary">返回首页</a>
+            <div>
+                <button onclick="showAddRoomModal()" class="btn btn-primary">添加房间</button>
+                <a href="/dashboard" class="btn btn-secondary">返回首页</a>
+            </div>
         </div>
 
         <table class="table">
@@ -31,9 +34,9 @@
                     <th>操作</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="roomsTableBody">
                 <% rooms.forEach(room => { %>
-                    <tr>
+                    <tr data-room-id="<%= room.id %>">
                         <td><%= room.room_number %></td>
                         <td>¥<%= room.monthly_rent.toFixed(2) %></td>
                         <td>¥<%= room.electricity_rate.toFixed(2) %>/度</td>
@@ -47,6 +50,32 @@
             </tbody>
         </table>
 
+        <div class="modal" id="addRoomModal">
+            <div class="modal-content">
+                <span class="close" onclick="closeAddRoomModal()">&times;</span>
+                <h3>添加房间</h3>
+                <form id="addRoomForm">
+                    <div class="form-group">
+                        <label>房号</label>
+                        <input type="text" id="room_number" required>
+                    </div>
+                    <div class="form-group">
+                        <label>月租金</label>
+                        <input type="number" id="monthly_rent" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>电费单价</label>
+                        <input type="number" id="electricity_rate" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>水费单价</label>
+                        <input type="number" id="water_rate" step="0.01" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </form>
+            </div>
+        </div>
+
         <div class="modal" id="editRoomModal">
             <div class="modal-content">
                 <span class="close" onclick="closeModal()">&times;</span>
@@ -55,7 +84,7 @@
                     <input type="hidden" id="edit_room_id">
                     <div class="form-group">
                         <label>房号</label>
-                        <input type="text" id="edit_room_number" readonly>
+                        <input type="text" id="edit_room_number">
                     </div>
                     <div class="form-group">
                         <label>月租金</label>
