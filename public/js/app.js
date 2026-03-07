@@ -137,7 +137,7 @@ document.getElementById('editRoomForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            updateRoomInTable(roomId, roomNumber, formData);
+            updateRoomInTable(roomId, formData.room_number, formData);
             closeModal();
         } else {
             alert(data.message);
