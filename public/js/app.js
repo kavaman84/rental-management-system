@@ -23,25 +23,23 @@ document.getElementById('addRoomForm').addEventListener('submit', function(e) {
             addRoomToTable(formData);
             closeAddRoomModal();
         } else {
-            alert(data.message);
-        }
-    })
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            addRoomToTable(data);
-            closeAddRoomModal();
-        } else {
-            // 显示后端返回的详细错误信息
+            // 解析错误信息，显示友好的中文提示
             let errorMsg = data.message || data.error || '添加失败';
-            alert(errorMsg);
+            let userFriendlyMsg = parseErrorMessage(errorMsg, '添加');
+
+            // 检查是否是房间号重复的错误
+            if (errorMsg.includes('UNIQUE constraint failed') || errorMsg.includes('SQLITE_CONSTRAINT')) {
+                userFriendlyMsg = '添加失败，房号重复';
+            }
+
+            alert(userFriendlyMsg);
         }
     })
     .catch(error => {
         console.error('添加房间错误:', error);
         // 检查是否是房间号重复的错误
         if (error.code === 'SQLITE_CONSTRAINT' || error.errno === 19) {
-            alert('房间号重复，添加失败');
+            alert('添加失败，房号重复');
         } else {
             alert('添加失败，请重试');
         }
@@ -156,16 +154,23 @@ document.getElementById('editRoomForm').addEventListener('submit', function(e) {
             updateRoomInTable(roomId, formData.room_number, formData);
             closeModal();
         } else {
-            // 显示后端返回的详细错误信息
+            // 解析错误信息，显示友好的中文提示
             let errorMsg = data.message || data.error || '更新失败';
-            alert(errorMsg);
+            let userFriendlyMsg = parseErrorMessage(errorMsg, '更新');
+
+            // 检查是否是房间号重复的错误
+            if (errorMsg.includes('UNIQUE constraint failed') || errorMsg.includes('SQLITE_CONSTRAINT')) {
+                userFriendlyMsg = '更新失败，房号重复';
+            }
+
+            alert(userFriendlyMsg);
         }
     })
     .catch(error => {
         console.error('更新房间信息错误:', error);
         // 检查是否是房间号重复的错误
         if (error.code === 'SQLITE_CONSTRAINT' || error.errno === 19) {
-            alert('房间号重复，更新失败');
+            alert('更新失败，房号重复');
         } else {
             alert('更新失败，请重试');
         }
@@ -260,4 +265,39 @@ window.onclick = function(event) {
     if (event.target == editModal) {
         closeModal();
     }
+}
+
+/**
+ * 解析错误消息，转换为友好的中文提示
+ * @param {string} errorMsg - 错误消息
+ * @param {string} action - 操作类型（添加/更新）
+ * @returns {string} 友好的中文提示
+ */
+function parseErrorMessage(errorMsg, action) {
+    if (!errorMsg) return `${action}失败，请重试`;
+
+    const errorLower = errorMsg.toLowerCase();
+
+    // 房间号重复
+    if (errorLower.includes('room_number') && (errorLower.includes('unique') || errorLower.includes('constraint'))) {
+        return `${action}失败，房号重复`;
+    }
+
+    // 房间ID不存在
+    if (errorLower.includes('room') && (errorLower.includes('not found') || errorLower.includes('doesn\'t exist'))) {
+        return `${action}失败，房间不存在`;
+    }
+
+    // 数据格式错误
+    if (errorLower.includes('invalid') || errorLower.includes('format')) {
+        return `${action}失败，数据格式错误`;
+    }
+
+    // 数据库错误
+    if (errorLower.includes('database') || errorLower.includes('sql')) {
+        return `${action}失败，数据库错误`;
+    }
+
+    // 默认返回原始错误消息
+    return errorMsg;
 }
