@@ -47,15 +47,15 @@ function closeAddRoomModal() {
 function addRoomToTable(room) {
     const tableBody = document.getElementById('roomsTableBody');
     const newRow = document.createElement('tr');
-    newRow.setAttribute('data-room-id', room.room_number);
+    newRow.setAttribute('data-room-id', room.id);
     newRow.innerHTML = `
         <td>${room.room_number}</td>
         <td>¥${parseFloat(room.monthly_rent).toFixed(2)}</td>
         <td>¥${parseFloat(room.electricity_rate).toFixed(2)}/度</td>
         <td>¥${parseFloat(room.water_rate).toFixed(2)}/吨</td>
         <td>
-            <button onclick="editRoom('${room.room_number}')" class="btn btn-small">编辑</button>
-            <a href="/rooms/${room.room_number}" class="btn btn-small">详情</a>
+            <button onclick="editRoom(${room.id})" class="btn btn-small">编辑</button>
+            <a href="/rooms/${room.id}" class="btn btn-small">详情</a>
         </td>
     `;
     tableBody.appendChild(newRow);
