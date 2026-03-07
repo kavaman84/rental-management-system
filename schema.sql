@@ -57,16 +57,9 @@ CREATE TABLE IF NOT EXISTS admins (
 INSERT INTO admins (username, password) VALUES
 ('admin', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy');
 
--- 插入示例房间数据
-INSERT INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES
-('101', 1500.00, 0.05, 0.80, 5.00),
-('102', 1800.00, 0.05, 0.80, 5.00),
-('201', 1200.00, 0.05, 0.80, 5.00),
-('202', 2000.00, 0.05, 0.80, 5.00);
-
--- 插入示例电表水表读数（2024年12月）
-INSERT INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after) VALUES
-(1, '2024-12-01', 0.00, 150.00, 0.00, 20.00),
-(2, '2024-12-01', 0.00, 200.00, 0.00, 25.00),
-(3, '2024-12-01', 0.00, 120.00, 0.00, 15.00),
-(4, '2024-12-01', 0.00, 180.00, 0.00, 22.00);
+-- 初始化时不再插入示例房间数据，用户可以自己添加
+-- INSERT INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES
+-- ('101', 1500.00, 0.05, 0.80, 5.00),
+-- ('102', 1800.00, 0.05, 0.80, 5.00),
+-- ('201', 1200.00, 0.05, 0.80, 5.00),
+-- ('202', 2000.00, 0.05, 0.80, 5.00);
