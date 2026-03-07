@@ -196,7 +196,13 @@ app.post('/rooms/add', (req, res) => {
         (err) => {
             if (err) {
                 console.error('添加房间错误:', err);
-                return res.status(500).json({ success: false, message: '添加失败' });
+                // 返回详细的错误信息
+                return res.status(500).json({
+                    success: false,
+                    message: err.message || '添加失败',
+                    errorCode: err.code,
+                    errno: err.errno
+                });
             }
 
             res.json({ success: true, message: '添加成功' });
@@ -259,7 +265,13 @@ app.post('/rooms/:id/update', (req, res) => {
         (err) => {
             if (err) {
                 console.error('更新房间信息错误:', err);
-                return res.status(500).json({ success: false, message: '更新失败' });
+                // 返回详细的错误信息
+                return res.status(500).json({
+                    success: false,
+                    message: err.message || '更新失败',
+                    errorCode: err.code,
+                    errno: err.errno
+                });
             }
 
             res.json({ success: true, message: '更新成功' });

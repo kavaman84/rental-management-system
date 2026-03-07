@@ -26,6 +26,17 @@ document.getElementById('addRoomForm').addEventListener('submit', function(e) {
             alert(data.message);
         }
     })
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            addRoomToTable(data);
+            closeAddRoomModal();
+        } else {
+            // 显示后端返回的详细错误信息
+            let errorMsg = data.message || data.error || '添加失败';
+            alert(errorMsg);
+        }
+    })
     .catch(error => {
         console.error('添加房间错误:', error);
         // 检查是否是房间号重复的错误
@@ -145,7 +156,9 @@ document.getElementById('editRoomForm').addEventListener('submit', function(e) {
             updateRoomInTable(roomId, formData.room_number, formData);
             closeModal();
         } else {
-            alert(data.message);
+            // 显示后端返回的详细错误信息
+            let errorMsg = data.message || data.error || '更新失败';
+            alert(errorMsg);
         }
     })
     .catch(error => {
