@@ -118,13 +118,13 @@ document.getElementById('editRoomForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     const formData = {
+        room_number: document.getElementById('edit_room_number').value,
         monthly_rent: document.getElementById('edit_monthly_rent').value,
         electricity_rate: document.getElementById('edit_electricity_rate').value,
         water_rate: document.getElementById('edit_water_rate').value
     };
 
     const roomId = document.getElementById('edit_room_id').value;
-    const roomNumber = document.getElementById('edit_room_number').value;
 
     fetch(`/rooms/${roomId}/update`, {
         method: 'POST',
