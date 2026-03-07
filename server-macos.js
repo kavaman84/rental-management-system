@@ -196,7 +196,12 @@ app.post('/rooms/add', (req, res) => {
         (err) => {
             if (err) {
                 console.error('添加房间错误:', err);
-                // 返回详细的错误信息
+                // 可能的失败原因：
+                // 1. 房间号重复 - 返回 "SQLITE_CONSTRAINT: UNIQUE constraint failed: rooms.room_number"
+                // 2. 数据格式错误（如租金为负数）
+                // 3. 数据库连接问题
+                // 4. 其他数据库约束错误
+                // 返回详细的错误信息，包括错误代码和错误消息
                 return res.status(500).json({
                     success: false,
                     message: err.message || '添加失败',
@@ -265,7 +270,13 @@ app.post('/rooms/:id/update', (req, res) => {
         (err) => {
             if (err) {
                 console.error('更新房间信息错误:', err);
-                // 返回详细的错误信息
+                // 可能的失败原因：
+                // 1. 房间号重复 - 返回 "SQLITE_CONSTRAINT: UNIQUE constraint failed: rooms.room_number"
+                // 2. 更新的房间ID不存在
+                // 3. 数据格式错误（如租金为负数）
+                // 4. 数据库连接问题
+                // 5. 其他数据库约束错误
+                // 返回详细的错误信息，包括错误代码和错误消息
                 return res.status(500).json({
                     success: false,
                     message: err.message || '更新失败',
