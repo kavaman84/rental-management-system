@@ -16,6 +16,7 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         room_number TEXT NOT NULL UNIQUE,
         monthly_rent REAL NOT NULL,
+        tax_rate REAL DEFAULT 0,
         electricity_rate REAL DEFAULT 0,
         water_rate REAL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -61,25 +62,25 @@ db.serialize(() => {
     // 插入示例管理员
     db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, ['admin', 'admin123']);
 
-    // 插入示例房间
-    db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
-        ['101', 1500.00, 0.05, 0.80, 5.00]);
-    db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
-        ['102', 1800.00, 0.05, 0.80, 5.00]);
-    db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
-        ['201', 1200.00, 0.05, 0.80, 5.00]);
-    db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
-        ['202', 2000.00, 0.05, 0.80, 5.00]);
+    // 初始化时不插入示例房间数据，用户可以自己添加
+    // db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
+    //     ['101', 1500.00, 0.05, 0.80, 5.00]);
+    // db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
+    //     ['102', 1800.00, 0.05, 0.80, 5.00]);
+    // db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
+    //     ['201', 1200.00, 0.05, 0.80, 5.00]);
+    // db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
+    //     ['202', 2000.00, 0.05, 0.80, 5.00]);
 
-    // 插入示例读数
-    db.run(`INSERT OR IGNORE INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after)
-        VALUES (?, ?, ?, ?, ?, ?)`, [1, '2024-12-01', 0.00, 150.00, 0.00, 20.00]);
-    db.run(`INSERT OR IGNORE INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after)
-        VALUES (?, ?, ?, ?, ?, ?)`, [2, '2024-12-01', 0.00, 200.00, 0.00, 25.00]);
-    db.run(`INSERT OR IGNORE INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after)
-        VALUES (?, ?, ?, ?, ?, ?)`, [3, '2024-12-01', 0.00, 120.00, 0.00, 15.00]);
-    db.run(`INSERT OR IGNORE INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after)
-        VALUES (?, ?, ?, ?, ?, ?)`, [4, '2024-12-01', 0.00, 180.00, 0.00, 22.00]);
+    // 初始化时不插入示例读数数据
+    // db.run(`INSERT OR IGNORE INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after)
+    //     VALUES (?, ?, ?, ?, ?, ?)`, [1, '2024-12-01', 0.00, 150.00, 0.00, 20.00]);
+    // db.run(`INSERT OR IGNORE INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after)
+    //     VALUES (?, ?, ?, ?, ?, ?)`, [2, '2024-12-01', 0.00, 200.00, 0.00, 25.00]);
+    // db.run(`INSERT OR IGNORE INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after)
+    //     VALUES (?, ?, ?, ?, ?, ?)`, [3, '2024-12-01', 0.00, 120.00, 0.00, 15.00]);
+    // db.run(`INSERT OR IGNORE INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after)
+    //     VALUES (?, ?, ?, ?, ?, ?)`, [4, '2024-12-01', 0.00, 180.00, 0.00, 22.00]);
 });
 
 // 中间件
