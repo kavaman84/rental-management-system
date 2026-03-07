@@ -44,6 +44,7 @@
                         <td>
                             <button onclick="editRoom(<%= room.id %>)" class="btn btn-small">编辑</button>
                             <a href="/rooms/<%= room.id %>" class="btn btn-small">详情</a>
+                            <button onclick="deleteRoom(<%= room.id %>)" class="btn btn-small btn-danger">删除</button>
                         </td>
                     </tr>
                 <% }); %>
