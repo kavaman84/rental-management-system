@@ -98,7 +98,7 @@ app.use(session({
 
 // 首页
 app.get('/', (req, res) => {
-    res.redirect('/login');
+    res.redirect('/dashboard');
 });
 
 // 登录页面
@@ -170,7 +170,7 @@ app.get('/dashboard', (req, res) => {
 // 房间管理
 app.get('/rooms', (req, res) => {
     if (!req.session.adminId) {
-        return res.redirect('/login');
+        return res.redirect('/dashboard');
     }
 
     db.all('SELECT * FROM rooms ORDER BY room_number', (err, rooms) => {
@@ -186,7 +186,7 @@ app.get('/rooms', (req, res) => {
 // 添加房间
 app.post('/rooms/add', (req, res) => {
     if (!req.session.adminId) {
-        return res.redirect('/login');
+        return res.redirect('/dashboard');
     }
 
     const { room_number, monthly_rent, electricity_rate, water_rate } = req.body;
@@ -219,7 +219,7 @@ app.post('/rooms/add', (req, res) => {
 // 删除房间
 app.post('/rooms/:id/delete', (req, res) => {
     if (!req.session.adminId) {
-        return res.redirect('/login');
+        return res.redirect('/dashboard');
     }
 
     const roomId = req.params.id;
@@ -237,7 +237,7 @@ app.post('/rooms/:id/delete', (req, res) => {
 // 获取单个房间详情
 app.get('/rooms/:id', (req, res) => {
     if (!req.session.adminId) {
-        return res.redirect('/login');
+        return res.redirect('/dashboard');
     }
 
     const roomId = req.params.id;
@@ -259,7 +259,7 @@ app.get('/rooms/:id', (req, res) => {
 // 更新房间信息
 app.post('/rooms/:id/update', (req, res) => {
     if (!req.session.adminId) {
-        return res.redirect('/login');
+        return res.redirect('/dashboard');
     }
 
     const roomId = req.params.id;
@@ -294,7 +294,7 @@ app.post('/rooms/:id/update', (req, res) => {
 // 收据管理
 app.get('/receipts', (req, res) => {
     if (!req.session.adminId) {
-        return res.redirect('/login');
+        return res.redirect('/dashboard');
     }
 
     const page = parseInt(req.query.page) || 1;
@@ -336,7 +336,7 @@ app.get('/receipts', (req, res) => {
 // 生成月收据
 app.post('/receipts/generate', (req, res) => {
     if (!req.session.adminId) {
-        return res.redirect('/login');
+        return res.redirect('/dashboard');
     }
 
     const roomId = req.body.room_id;
@@ -444,7 +444,7 @@ app.post('/receipts/generate', (req, res) => {
 // 支付收据
 app.post('/receipts/:id/pay', (req, res) => {
     if (!req.session.adminId) {
-        return res.redirect('/login');
+        return res.redirect('/dashboard');
     }
 
     const receiptId = req.params.id;
@@ -462,7 +462,7 @@ app.post('/receipts/:id/pay', (req, res) => {
 // 登出
 app.get('/logout', (req, res) => {
     req.session.destroy();
-    res.redirect('/login');
+    res.redirect('/dashboard');
 });
 
 // 404

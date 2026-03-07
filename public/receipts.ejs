@@ -18,7 +18,7 @@
 
         <div class="page-header">
             <h2>收据管理</h2>
-            <a href="/" class="btn btn-secondary">返回首页</a>
+            <a href="/dashboard" class="btn btn-secondary">返回首页</a>
         </div>
 
         <div class="generate-receipt">
@@ -26,7 +26,7 @@
             <form id="generateReceiptForm" class="form">
                 <div class="form-group">
                     <label for="room_id">选择房间</label>
-                    <select id="room_id" name="room_id" required>
+                    <select id="room_id" name="room_id" required onchange="updateMeterReadings()">
                         <option value="">请选择房间</option>
                         <% rooms.forEach(room => { %>
                             <option value="<%= room.id %>"><%= room.room_number %></option>
@@ -36,6 +36,22 @@
                 <div class="form-group">
                     <label for="receipt_month">收据月份</label>
                     <input type="month" id="receipt_month" name="receipt_month" required>
+                </div>
+                <div class="form-group">
+                    <label for="electricity_before">上月电表读数</label>
+                    <input type="number" id="electricity_before" name="electricity_before" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="electricity_after">本月电表读数</label>
+                    <input type="number" id="electricity_after" name="electricity_after" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="water_before">上月水表读数</label>
+                    <input type="number" id="water_before" name="water_before" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="water_after">本月水表读数</label>
+                    <input type="number" id="water_after" name="water_after" step="0.01" required>
                 </div>
                 <button type="submit" class="btn btn-primary">生成收据</button>
             </form>

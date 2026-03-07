@@ -194,7 +194,11 @@ document.getElementById('generateReceiptForm').addEventListener('submit', functi
 
     const formData = {
         room_id: document.getElementById('room_id').value,
-        receipt_month: document.getElementById('receipt_month').value
+        receipt_month: document.getElementById('receipt_month').value,
+        electricity_before: document.getElementById('electricity_before').value,
+        electricity_after: document.getElementById('electricity_after').value,
+        water_before: document.getElementById('water_before').value,
+        water_after: document.getElementById('water_after').value
     };
 
     fetch('/receipts/generate', {
@@ -218,6 +222,30 @@ document.getElementById('generateReceiptForm').addEventListener('submit', functi
         alert('生成失败，请重试');
     });
 });
+
+// 更新电表水表读数
+function updateMeterReadings() {
+    const roomId = document.getElementById('room_id').value;
+    const receiptMonth = document.getElementById('receipt_month').value;
+
+    if (!roomId || !receiptMonth) {
+        return;
+    }
+
+    fetch(`/rooms/${roomId}`)
+        .then(response => response.json())
+        .then(room => {
+            if (room && room.electricity_before !== undefined) {
+                document.getElementById('electricity_before').value = room.electricity_before;
+            }
+            if (room && room.water_before !== undefined) {
+                document.getElementById('water_before').value = room.water_before;
+            }
+        })
+        .catch(error => {
+            console.error('获取房间信息错误:', error);
+        });
+}
 
 // 支付收据
 function payReceipt(receiptId) {
