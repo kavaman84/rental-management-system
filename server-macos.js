@@ -341,6 +341,20 @@ app.post('/receipts/generate', (req, res) => {
 
     const roomId = req.body.room_id;
     const receiptMonth = req.body.receipt_month;
+    // 获取用户输入的电表水表读数
+    const electricityBefore = parseFloat(req.body.electricity_before);
+    const electricityAfter = parseFloat(req.body.electricity_after);
+    const waterBefore = parseFloat(req.body.water_before);
+    const waterAfter = parseFloat(req.body.water_after);
+
+    // 验证读数
+    if (electricityBefore < 0 || electricityAfter < 0 || waterBefore < 0 || waterAfter < 0) {
+        return res.status(400).json({ success: false, message: '读数不能为负数' });
+    }
+
+    if (electricityAfter < electricityBefore || waterAfter < waterBefore) {
+        return res.status(400).json({ success: false, message: '本月读数必须大于或等于上月读数' });
+    }
 
     db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
         if (err) {
