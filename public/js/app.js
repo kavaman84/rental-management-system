@@ -28,7 +28,12 @@ document.getElementById('addRoomForm').addEventListener('submit', function(e) {
     })
     .catch(error => {
         console.error('添加房间错误:', error);
-        alert('添加失败，请重试');
+        // 检查是否是房间号重复的错误
+        if (error.code === 'SQLITE_CONSTRAINT' || error.errno === 19) {
+            alert('房间号重复，添加失败');
+        } else {
+            alert('添加失败，请重试');
+        }
     });
 });
 
@@ -145,7 +150,12 @@ document.getElementById('editRoomForm').addEventListener('submit', function(e) {
     })
     .catch(error => {
         console.error('更新房间信息错误:', error);
-        alert('更新失败，请重试');
+        // 检查是否是房间号重复的错误
+        if (error.code === 'SQLITE_CONSTRAINT' || error.errno === 19) {
+            alert('房间号重复，更新失败');
+        } else {
+            alert('更新失败，请重试');
+        }
     });
 });
 
