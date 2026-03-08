@@ -599,7 +599,20 @@ app.get('/receipts/:id', (req, res) => {
     const receiptId = req.params.id;
 
     db.get(
-        'SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id WHERE r.id = ?',
+        `SELECT r.*, room_number,
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = r.room_id AND reading_date < r.receipt_month
+                 ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = r.room_id AND reading_date < r.receipt_month
+                 ORDER BY reading_date DESC LIMIT 1) AS water_before,
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS electricity_after,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS water_after
+         FROM receipts r
+         JOIN rooms ON r.room_id = rooms.id
+         WHERE r.id = ?`,
         [receiptId],
         (err, receipt) => {
             if (err) {
@@ -623,16 +636,29 @@ app.post('/receipts/:id/update', (req, res) => {
     }
 
     const receiptId = req.params.id;
-    const { receipt_month, monthly_rent, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount } = req.body;
+    const { receipt_month, electricity_before, electricity_after, water_before, water_after } = req.body;
 
     db.run(
-        'UPDATE receipts SET receipt_month = ?, monthly_rent = ?, electricity_amount = ?, water_amount = ?, housekeeping_fee = ?, internet_fee = ?, total_amount = ? WHERE id = ?',
-        [receipt_month, monthly_rent, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, receiptId],
+        'UPDATE receipts SET receipt_month = ? WHERE id = ?',
+        [receipt_month, receiptId],
         (err) => {
             if (err) {
                 console.error('修改收据错误:', err);
                 return res.status(500).json({ success: false, message: '修改失败' });
             }
+
+            // 更新 meter_readings 表
+            db.run(
+                'UPDATE meter_readings SET electricity_before = ?, electricity_after = ?, water_before = ?, water_after = ? WHERE room_id = (SELECT room_id FROM receipts WHERE id = ?) AND reading_date = ?',
+                [electricity_before, electricity_after, water_before, water_after, receiptId, receipt_month],
+                (err) => {
+                    if (err) {
+                        console.error('更新读数错误:', err);
+                    } else {
+                        console.log('读数已更新:', { receiptId, receipt_month, electricity_before, electricity_after, water_before, water_after });
+                    }
+                }
+            );
 
             res.json({ success: true, message: '修改成功' });
         }

@@ -430,12 +430,10 @@ document.getElementById('editReceiptForm').addEventListener('submit', function(e
 
     const formData = {
         receipt_month: document.getElementById('edit_receipt_month').value,
-        monthly_rent: document.getElementById('edit_monthly_rent').value,
-        electricity_amount: document.getElementById('edit_electricity_amount').value,
-        water_amount: document.getElementById('edit_water_amount').value,
-        housekeeping_fee: document.getElementById('edit_housekeeping_fee').value,
-        internet_fee: document.getElementById('edit_internet_fee').value,
-        total_amount: document.getElementById('edit_total_amount').value
+        electricity_before: document.getElementById('edit_electricity_before').value,
+        electricity_after: document.getElementById('edit_electricity_after').value,
+        water_before: document.getElementById('edit_water_before').value,
+        water_after: document.getElementById('edit_water_after').value
     };
 
     const receiptId = document.getElementById('edit_receipt_id').value;
