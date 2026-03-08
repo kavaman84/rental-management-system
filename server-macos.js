@@ -62,6 +62,55 @@ db.serialize(() => {
     // 插入示例管理员
     db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, ['admin', 'admin123']);
 
+    // 自动迁移：添加缺失的字段
+    console.log('开始数据库迁移...');
+
+    // 检查并添加 rooms 表字段
+    db.all("PRAGMA table_info(rooms)", (err, columns) => {
+        if (err) {
+            console.error('检查 rooms 表结构错误:', err);
+            return;
+        }
+
+        const fieldNames = columns.map(c => c.name);
+
+        // 添加 housekeeping_fee
+        if (!fieldNames.includes('housekeeping_fee')) {
+            console.log('添加 housekeeping_fee 字段到 rooms 表...');
+            db.run('ALTER TABLE rooms ADD COLUMN housekeeping_fee REAL DEFAULT 0');
+        }
+
+        // 添加 internet_fee
+        if (!fieldNames.includes('internet_fee')) {
+            console.log('添加 internet_fee 字段到 rooms 表...');
+            db.run('ALTER TABLE rooms ADD COLUMN internet_fee REAL DEFAULT 0');
+        }
+    });
+
+    // 检查并添加 receipts 表字段
+    db.all("PRAGMA table_info(receipts)", (err, columns) => {
+        if (err) {
+            console.error('检查 receipts 表结构错误:', err);
+            return;
+        }
+
+        const fieldNames = columns.map(c => c.name);
+
+        // 添加 housekeeping_fee
+        if (!fieldNames.includes('housekeeping_fee')) {
+            console.log('添加 housekeeping_fee 字段到 receipts 表...');
+            db.run('ALTER TABLE receipts ADD COLUMN housekeeping_fee REAL DEFAULT 0');
+        }
+
+        // 添加 internet_fee
+        if (!fieldNames.includes('internet_fee')) {
+            console.log('添加 internet_fee 字段到 receipts 表...');
+            db.run('ALTER TABLE receipts ADD COLUMN internet_fee REAL DEFAULT 0');
+        }
+    });
+
+    console.log('数据库迁移完成');
+
     // 初始化时不插入示例房间数据，用户可以自己添加
     // db.run(`INSERT OR IGNORE INTO rooms (room_number, monthly_rent, tax_rate, electricity_rate, water_rate) VALUES (?, ?, ?, ?, ?)`,
     //     ['101', 1500.00, 0.05, 0.80, 5.00]);
