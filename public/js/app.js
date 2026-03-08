@@ -259,7 +259,7 @@ document.getElementById('generateReceiptForm').addEventListener('submit', functi
     }
 });
 
-// 更新电表水表读数
+// 更新电表水表读数（自动从数据库读取上月读数）
 function updateMeterReadings() {
     const roomId = document.getElementById('room_id').value;
     const receiptMonth = document.getElementById('receipt_month').value;
@@ -268,18 +268,27 @@ function updateMeterReadings() {
         return;
     }
 
-    fetch(`/rooms/${roomId}`)
+    console.log('准备查询上月读数:', { roomId, receiptMonth });
+
+    fetch(`/receipts/meter-readings/${roomId}/${receiptMonth}`)
         .then(response => response.json())
-        .then(room => {
-            if (room && room.electricity_before !== undefined) {
-                document.getElementById('electricity_before').value = room.electricity_before;
-            }
-            if (room && room.water_before !== undefined) {
-                document.getElementById('water_before').value = room.water_before;
+        .then(data => {
+            if (data.success && data.electricity_before !== undefined) {
+                console.log('找到上月读数:', data);
+                document.getElementById('electricity_before').value = data.electricity_before;
+                document.getElementById('water_before').value = data.water_before;
+                alert('已自动填充上月水电读数');
+            } else {
+                console.log('未找到上月读数，需要手动填写:', data.message);
+                // 清空上月读数字段，提示用户手动填写
+                document.getElementById('electricity_before').value = '';
+                document.getElementById('water_before').value = '';
+                alert('未找到上月读数，请手动填写');
             }
         })
         .catch(error => {
-            console.error('获取房间信息错误:', error);
+            console.error('获取上月读数错误:', error);
+            alert('获取上月读数失败，请手动填写');
         });
 }
 
@@ -311,11 +320,19 @@ function payReceipt(receiptId) {
 // 设置默认月份为当前月份
 document.addEventListener('DOMContentLoaded', function() {
     const receiptMonthInput = document.getElementById('receipt_month');
+    const roomIdSelect = document.getElementById('room_id');
+
+    // 设置默认月份为当前月份
     if (receiptMonthInput) {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         receiptMonthInput.value = `${year}-${month}`;
+
+        // 如果房间已选择，自动查询上月读数
+        if (roomIdSelect && roomIdSelect.value) {
+            updateMeterReadings();
+        }
     }
 });
 

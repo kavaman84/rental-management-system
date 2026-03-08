@@ -333,6 +333,56 @@ app.get('/receipts', (req, res) => {
     });
 });
 
+// 获取上个月的水电读数
+app.get('/receipts/meter-readings/:roomId/:month', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/dashboard');
+    }
+
+    const roomId = req.params.roomId;
+    const month = req.params.month;
+
+    // 从月份中提取年份和月份（例如："2026-02" -> year: 2026, month: 2）
+    const [year, monthNum] = month.split('-').map(Number);
+
+    // 计算上个月的月份
+    let lastYear = year;
+    let lastMonth = monthNum - 1;
+
+    if (lastMonth === 0) {
+        lastMonth = 12;
+        lastYear = year - 1;
+    }
+
+    // 格式化上个月份为 "YYYY-MM"
+    const lastMonthStr = `${String(lastYear).padStart(4, '0')}-${String(lastMonth).padStart(2, '0')}`;
+
+    // 查询上个月的水电读数
+    db.get(
+        'SELECT electricity_after, water_after FROM meter_readings WHERE room_id = ? AND reading_date = ?',
+        [roomId, lastMonthStr],
+        (err, reading) => {
+            if (err) {
+                console.error('获取上个月读数错误:', err);
+                return res.status(500).json({ success: false, message: '获取读数失败' });
+            }
+
+            if (reading) {
+                res.json({
+                    success: true,
+                    electricity_before: reading.electricity_after,
+                    water_before: reading.water_after
+                });
+            } else {
+                res.json({
+                    success: false,
+                    message: '未找到上个月读数'
+                });
+            }
+        }
+    );
+});
+
 // 生成月收据
 app.post('/receipts/generate', (req, res) => {
     if (!req.session.adminId) {
