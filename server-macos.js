@@ -446,6 +446,69 @@ app.post('/receipts/:id/pay', (req, res) => {
     });
 });
 
+// 获取收据详情（用于修改）
+app.get('/receipts/:id', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/dashboard');
+    }
+
+    const receiptId = req.params.id;
+
+    db.get('SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id WHERE r.id = ?', [receiptId], (err, receipt) => {
+        if (err) {
+            console.error('获取收据详情错误:', err);
+            return res.status(500).send('服务器错误');
+        }
+
+        if (!receipt) {
+            return res.status(404).send('收据不存在');
+        }
+
+        res.json(receipt);
+    });
+});
+
+// 修改收据
+app.post('/receipts/:id/update', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/dashboard');
+    }
+
+    const receiptId = req.params.id;
+    const { receipt_month, monthly_rent, electricity_amount, water_amount, total_amount } = req.body;
+
+    db.run(
+        'UPDATE receipts SET receipt_month = ?, monthly_rent = ?, electricity_amount = ?, water_amount = ?, total_amount = ? WHERE id = ?',
+        [receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, receiptId],
+        (err) => {
+            if (err) {
+                console.error('修改收据错误:', err);
+                return res.status(500).json({ success: false, message: '修改失败' });
+            }
+
+            res.json({ success: true, message: '修改成功' });
+        }
+    );
+});
+
+// 删除收据
+app.post('/receipts/:id/delete', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/dashboard');
+    }
+
+    const receiptId = req.params.id;
+
+    db.run('DELETE FROM receipts WHERE id = ?', [receiptId], (err) => {
+        if (err) {
+            console.error('删除收据错误:', err);
+            return res.status(500).json({ success: false, message: '删除失败' });
+        }
+
+        res.json({ success: true, message: '删除成功' });
+    });
+});
+
 // 登出
 app.get('/logout', (req, res) => {
     req.session.destroy();

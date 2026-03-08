@@ -323,11 +323,15 @@ document.addEventListener('DOMContentLoaded', function() {
 window.onclick = function(event) {
     const addModal = document.getElementById('addRoomModal');
     const editModal = document.getElementById('editRoomModal');
+    const editReceiptModal = document.getElementById('editReceiptModal');
     if (event.target == addModal) {
         closeAddRoomModal();
     }
     if (event.target == editModal) {
         closeModal();
+    }
+    if (event.target == editReceiptModal) {
+        closeEditReceiptModal();
     }
 }
 
@@ -364,4 +368,94 @@ function parseErrorMessage(errorMsg, action) {
 
     // 默认返回原始错误消息
     return errorMsg;
+}
+
+// 显示修改收据模态框
+function showEditReceiptModal(receiptId) {
+    fetch(`/receipts/${receiptId}`)
+        .then(response => response.json())
+        .then(receipt => {
+            if (receipt) {
+                document.getElementById('edit_receipt_id').value = receipt.id;
+                document.getElementById('edit_receipt_month').value = receipt.receipt_month;
+                document.getElementById('edit_monthly_rent').value = receipt.monthly_rent;
+                document.getElementById('edit_electricity_amount').value = receipt.electricity_amount;
+                document.getElementById('edit_water_amount').value = receipt.water_amount;
+                document.getElementById('edit_total_amount').value = receipt.total_amount;
+                document.getElementById('editReceiptModal').style.display = 'block';
+            } else {
+                alert('获取收据信息失败');
+            }
+        })
+        .catch(error => {
+            console.error('获取收据信息错误:', error);
+            alert('获取收据信息失败');
+        });
+}
+
+// 关闭修改收据模态框
+function closeEditReceiptModal() {
+    document.getElementById('editReceiptModal').style.display = 'none';
+    document.getElementById('editReceiptForm').reset();
+}
+
+// 更新收据
+document.getElementById('editReceiptForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = {
+        receipt_month: document.getElementById('edit_receipt_month').value,
+        monthly_rent: document.getElementById('edit_monthly_rent').value,
+        electricity_amount: document.getElementById('edit_electricity_amount').value,
+        water_amount: document.getElementById('edit_water_amount').value,
+        total_amount: document.getElementById('edit_total_amount').value
+    };
+
+    const receiptId = document.getElementById('edit_receipt_id').value;
+
+    fetch(`/receipts/${receiptId}/update`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert(data.message || '更新失败');
+        }
+    })
+    .catch(error => {
+        console.error('更新收据错误:', error);
+        alert('更新失败，请重试');
+    });
+});
+
+// 删除收据
+function deleteReceipt(receiptId) {
+    if (confirm('确定要删除这张收据吗？')) {
+        fetch(`/receipts/${receiptId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('删除收据错误:', error);
+            alert('删除失败，请重试');
+        });
+    }
 }
