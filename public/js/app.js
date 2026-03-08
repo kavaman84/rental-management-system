@@ -192,35 +192,67 @@ function updateRoomInTable(roomId, roomNumber, formData) {
 document.getElementById('generateReceiptForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const formData = {
-        room_id: document.getElementById('room_id').value,
-        receipt_month: document.getElementById('receipt_month').value,
-        electricity_before: document.getElementById('electricity_before').value,
-        electricity_after: document.getElementById('electricity_after').value,
-        water_before: document.getElementById('water_before').value,
-        water_after: document.getElementById('water_after').value
-    };
+    try {
+        const formData = {
+            room_id: document.getElementById('room_id').value,
+            receipt_month: document.getElementById('receipt_month').value,
+            electricity_before: document.getElementById('electricity_before').value,
+            electricity_after: document.getElementById('electricity_after').value,
+            water_before: document.getElementById('water_before').value,
+            water_after: document.getElementById('water_after').value
+        };
 
-    fetch('/receipts/generate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            window.location.reload();
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('生成收据错误:', error);
-        alert('生成失败，请重试');
-    });
+        console.log('准备生成收据:', formData);
+
+        fetch('/receipts/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            console.log('响应状态:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP错误! 状态: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('服务器响应:', data);
+
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.message || '生成失败');
+            }
+        })
+        .catch(error => {
+            console.error('生成收据错误详情:', error);
+            console.error('错误堆栈:', error.stack);
+
+            let errorMessage = '生成收据失败';
+
+            // 检查网络错误
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                errorMessage = '无法连接到服务器，请检查服务器是否正在运行';
+            }
+            // 检查HTTP错误
+            else if (error.message.includes('HTTP错误')) {
+                errorMessage = error.message;
+            }
+            // 其他错误
+            else {
+                errorMessage = `${error.message}\n\n请检查浏览器控制台(F12)查看详细错误信息`;
+            }
+
+            alert(errorMessage);
+        });
+    } catch (error) {
+        console.error('生成收据异常:', error);
+        alert('发生意外错误: ' + error.message);
+    }
 });
 
 // 更新电表水表读数
