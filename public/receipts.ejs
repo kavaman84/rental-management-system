@@ -65,7 +65,6 @@
                         <th>房号</th>
                         <th>月份</th>
                         <th>月租金</th>
-                        <th>税费</th>
                         <th>电费</th>
                         <th>水费</th>
                         <th>总金额</th>
@@ -80,7 +79,6 @@
                                 <td><%= receipt.room_number %></td>
                                 <td><%= receipt.receipt_month %></td>
                                 <td>¥<%= receipt.monthly_rent.toFixed(2) %></td>
-                                <td>¥<%= receipt.tax_amount.toFixed(2) %></td>
                                 <td>¥<%= receipt.electricity_amount.toFixed(2) %></td>
                                 <td>¥<%= receipt.water_amount.toFixed(2) %></td>
                                 <td class="total">¥<%= receipt.total_amount.toFixed(2) %></td>
