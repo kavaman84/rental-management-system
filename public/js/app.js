@@ -142,7 +142,9 @@ if (document.getElementById('editRoomForm')) {
             room_number: document.getElementById('edit_room_number').value,
             monthly_rent: document.getElementById('edit_monthly_rent').value,
             electricity_rate: document.getElementById('edit_electricity_rate').value,
-            water_rate: document.getElementById('edit_water_rate').value
+            water_rate: document.getElementById('edit_water_rate').value,
+            housekeeping_fee: document.getElementById('edit_housekeeping_fee').value,
+            internet_fee: document.getElementById('edit_internet_fee').value
         };
 
         const roomId = document.getElementById('edit_room_id').value;
