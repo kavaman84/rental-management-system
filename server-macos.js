@@ -311,29 +311,22 @@ app.get('/receipts', (req, res) => {
             `SELECT
                 r.*,
                 room_number,
-                mr_before_electricity_after AS electricity_before,
-                mr_before_water_after AS water_before,
-                mr_current_electricity_after AS electricity_after,
-                mr_current_water_after AS water_after
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = r.room_id
+                 AND reading_date < r.receipt_month
+                 ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = r.room_id
+                 AND reading_date < r.receipt_month
+                 ORDER BY reading_date DESC LIMIT 1) AS water_before,
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = r.room_id
+                 AND reading_date = r.receipt_month) AS electricity_after,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = r.room_id
+                 AND reading_date = r.receipt_month) AS water_after
             FROM receipts r
             JOIN rooms ON r.room_id = rooms.id
-            LEFT JOIN meter_readings mr_current ON r.room_id = mr_current.room_id AND mr_current.reading_date = r.receipt_month
-            LEFT JOIN meter_readings mr_before_electricity ON r.room_id = mr_before_electricity.room_id
-                AND mr_before_electricity.reading_date = (
-                    SELECT reading_date FROM meter_readings
-                    WHERE room_id = r.room_id
-                    AND reading_date < r.receipt_month
-                    ORDER BY reading_date DESC
-                    LIMIT 1
-                )
-            LEFT JOIN meter_readings mr_before_water ON r.room_id = mr_before_water.room_id
-                AND mr_before_water.reading_date = (
-                    SELECT reading_date FROM meter_readings
-                    WHERE room_id = r.room_id
-                    AND reading_date < r.receipt_month
-                    ORDER BY reading_date DESC
-                    LIMIT 1
-                )
             ORDER BY r.receipt_month DESC, r.room_id ASC
             LIMIT ? OFFSET ?`,
             [limit, offset],
