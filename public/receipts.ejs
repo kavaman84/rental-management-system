@@ -83,10 +83,12 @@
                                 <td><%= receipt.room_number %></td>
                                 <td><%= receipt.receipt_month %></td>
                                 <td>¥<%= receipt.monthly_rent.toFixed(2) %></td>
-                                <td><%= receipt.electricity_consumption.toFixed(2) %></td>
-                                <td><%= receipt.electricity_amount.toFixed(2) %></td>
-                                <td><%= receipt.water_consumption.toFixed(2) %></td>
-                                <td><%= receipt.water_amount.toFixed(2) %></td>
+                                <td><%= receipt.electricity_before ? receipt.electricity_before.toFixed(2) : '-' %></td>
+                                <td><%= receipt.electricity_after ? receipt.electricity_after.toFixed(2) : '-' %></td>
+                                <td>¥<%= receipt.electricity_amount.toFixed(2) %></td>
+                                <td><%= receipt.water_before ? receipt.water_before.toFixed(2) : '-' %></td>
+                                <td><%= receipt.water_after ? receipt.water_after.toFixed(2) : '-' %></td>
+                                <td>¥<%= receipt.water_amount.toFixed(2) %></td>
                                 <td class="total">¥<%= receipt.total_amount.toFixed(2) %></td>
                                 <td>
                                     <span class="status <%= receipt.status %>">
