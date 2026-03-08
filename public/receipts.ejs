@@ -71,6 +71,8 @@
                         <th>上月水表</th>
                         <th>本月水表</th>
                         <th>水费</th>
+                        <th>卫生费</th>
+                        <th>网费</th>
                         <th>总金额</th>
                         <th>状态</th>
                         <th>操作</th>
@@ -89,6 +91,8 @@
                                 <td><%= receipt.water_before ? receipt.water_before.toFixed(2) : '-' %></td>
                                 <td><%= receipt.water_after ? receipt.water_after.toFixed(2) : '-' %></td>
                                 <td>¥<%= receipt.water_amount.toFixed(2) %></td>
+                                <td>¥<%= receipt.housekeeping_fee ? receipt.housekeeping_fee.toFixed(2) : '0.00' %></td>
+                                <td>¥<%= receipt.internet_fee ? receipt.internet_fee.toFixed(2) : '0.00' %></td>
                                 <td class="total">¥<%= receipt.total_amount.toFixed(2) %></td>
                                 <td>
                                     <span class="status <%= receipt.status %>">
@@ -147,6 +151,14 @@
                 <div class="form-group">
                     <label for="edit_water_amount">水费</label>
                     <input type="number" step="0.01" id="edit_water_amount" name="edit_water_amount" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_housekeeping_fee">卫生费</label>
+                    <input type="number" step="0.01" id="edit_housekeeping_fee" name="edit_housekeeping_fee" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_internet_fee">网费</label>
+                    <input type="number" step="0.01" id="edit_internet_fee" name="edit_internet_fee" required>
                 </div>
                 <div class="form-group">
                     <label for="edit_total_amount">总金额</label>

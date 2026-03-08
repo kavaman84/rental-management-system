@@ -433,6 +433,8 @@ document.getElementById('editReceiptForm').addEventListener('submit', function(e
         monthly_rent: document.getElementById('edit_monthly_rent').value,
         electricity_amount: document.getElementById('edit_electricity_amount').value,
         water_amount: document.getElementById('edit_water_amount').value,
+        housekeeping_fee: document.getElementById('edit_housekeeping_fee').value,
+        internet_fee: document.getElementById('edit_internet_fee').value,
         total_amount: document.getElementById('edit_total_amount').value
     };
 

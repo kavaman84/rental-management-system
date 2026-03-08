@@ -442,10 +442,11 @@ app.post('/receipts/generate', (req, res) => {
 
         // 计算费用
         const monthlyRent = parseFloat(room.monthly_rent);
-        const taxAmount = monthlyRent * parseFloat(room.tax_rate);
         const electricityAmount = electricityConsumption * parseFloat(room.electricity_rate);
         const waterAmount = waterConsumption * parseFloat(room.water_rate);
-        const totalAmount = monthlyRent + taxAmount + electricityAmount + waterAmount;
+        const housekeepingFee = parseFloat(room.housekeeping_fee) || 0;
+        const internetFee = parseFloat(room.internet_fee) || 0;
+        const totalAmount = monthlyRent + electricityAmount + waterAmount + housekeepingFee + internetFee;
 
         db.get('SELECT * FROM receipts WHERE room_id = ? AND receipt_month = ?', [roomId, receiptMonth], (err, existingReceipts) => {
             if (err) {
@@ -479,14 +480,15 @@ app.post('/receipts/generate', (req, res) => {
 
             // 创建收据
             db.run(
-                'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     roomId,
                     receiptMonth,
                     monthlyRent,
-                    taxAmount,
                     electricityAmount,
                     waterAmount,
+                    housekeepingFee,
+                    internetFee,
                     totalAmount,
                     electricityConsumption,
                     waterConsumption,
@@ -545,18 +547,22 @@ app.get('/receipts/:id', (req, res) => {
 
     const receiptId = req.params.id;
 
-    db.get('SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id WHERE r.id = ?', [receiptId], (err, receipt) => {
-        if (err) {
-            console.error('获取收据详情错误:', err);
-            return res.status(500).send('服务器错误');
-        }
+    db.get(
+        'SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id WHERE r.id = ?',
+        [receiptId],
+        (err, receipt) => {
+            if (err) {
+                console.error('获取收据详情错误:', err);
+                return res.status(500).send('服务器错误');
+            }
 
-        if (!receipt) {
-            return res.status(404).send('收据不存在');
-        }
+            if (!receipt) {
+                return res.status(404).send('收据不存在');
+            }
 
-        res.json(receipt);
-    });
+            res.json(receipt);
+        }
+    );
 });
 
 // 修改收据
@@ -566,11 +572,11 @@ app.post('/receipts/:id/update', (req, res) => {
     }
 
     const receiptId = req.params.id;
-    const { receipt_month, monthly_rent, electricity_amount, water_amount, total_amount } = req.body;
+    const { receipt_month, monthly_rent, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount } = req.body;
 
     db.run(
-        'UPDATE receipts SET receipt_month = ?, monthly_rent = ?, electricity_amount = ?, water_amount = ?, total_amount = ? WHERE id = ?',
-        [receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, receiptId],
+        'UPDATE receipts SET receipt_month = ?, monthly_rent = ?, electricity_amount = ?, water_amount = ?, housekeeping_fee = ?, internet_fee = ?, total_amount = ? WHERE id = ?',
+        [receipt_month, monthly_rent, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, receiptId],
         (err) => {
             if (err) {
                 console.error('修改收据错误:', err);
