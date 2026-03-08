@@ -263,7 +263,7 @@ app.post('/rooms/:id/update', (req, res) => {
     }
 
     const roomId = req.params.id;
-    const { room_number, monthly_rent, electricity_rate, water_rate } = req.body;
+    const { room_number, monthly_rent, electricity_rate, water_rate, housekeeping_fee, internet_fee } = req.body;
 
     db.run(
         'UPDATE rooms SET room_number = ?, monthly_rent = ?, electricity_rate = ?, water_rate = ?, housekeeping_fee = ?, internet_fee = ? WHERE id = ?',
