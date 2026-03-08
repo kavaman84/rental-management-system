@@ -426,8 +426,7 @@ app.post('/receipts/generate', (req, res) => {
             );
         });
     });
-        });
-
+});
 
 // 支付收据
 app.post('/receipts/:id/pay', (req, res) => {
