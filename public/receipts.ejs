@@ -65,7 +65,11 @@
                         <th>房号</th>
                         <th>月份</th>
                         <th>月租金</th>
+                        <th>上月电表</th>
+                        <th>本月电表</th>
                         <th>电费</th>
+                        <th>上月水表</th>
+                        <th>本月水表</th>
                         <th>水费</th>
                         <th>总金额</th>
                         <th>状态</th>
@@ -79,8 +83,10 @@
                                 <td><%= receipt.room_number %></td>
                                 <td><%= receipt.receipt_month %></td>
                                 <td>¥<%= receipt.monthly_rent.toFixed(2) %></td>
-                                <td>¥<%= receipt.electricity_amount.toFixed(2) %></td>
-                                <td>¥<%= receipt.water_amount.toFixed(2) %></td>
+                                <td><%= receipt.electricity_consumption.toFixed(2) %></td>
+                                <td><%= receipt.electricity_amount.toFixed(2) %></td>
+                                <td><%= receipt.water_consumption.toFixed(2) %></td>
+                                <td><%= receipt.water_amount.toFixed(2) %></td>
                                 <td class="total">¥<%= receipt.total_amount.toFixed(2) %></td>
                                 <td>
                                     <span class="status <%= receipt.status %>">
@@ -95,7 +101,7 @@
                         <% }); %>
                     <% } else { %>
                         <tr>
-                            <td colspan="9" style="text-align: center;">暂无收据</td>
+                            <td colspan="12" style="text-align: center;">暂无收据</td>
                         </tr>
                     <% } %>
                 </tbody>

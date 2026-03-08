@@ -437,6 +437,27 @@ app.post('/receipts/generate', (req, res) => {
                 return res.status(400).json({ success: false, message: '该月份的收据已存在' });
             }
 
+            // 保存读数到 meter_readings 表
+            db.run(
+                'INSERT INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after) VALUES (?, ?, ?, ?, ?, ?)',
+                [
+                    roomId,
+                    receiptMonth,
+                    electricityBefore,
+                    electricityAfter,
+                    waterBefore,
+                    waterAfter
+                ],
+                (err) => {
+                    if (err) {
+                        console.error('保存读数错误:', err);
+                        return res.status(500).json({ success: false, message: '保存读数失败' });
+                    }
+                    console.log('读数已保存:', { roomId, receiptMonth, electricityBefore, electricityAfter, waterBefore, waterAfter });
+                }
+            );
+
+            // 创建收据
             db.run(
                 'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
