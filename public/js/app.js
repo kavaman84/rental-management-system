@@ -69,6 +69,8 @@ function addRoomToTable(room) {
         <td>¥${parseFloat(room.monthly_rent).toFixed(2)}</td>
         <td>¥${parseFloat(room.electricity_rate).toFixed(2)}/度</td>
         <td>¥${parseFloat(room.water_rate).toFixed(2)}/吨</td>
+        <td>¥${parseFloat(room.housekeeping_fee).toFixed(2)}</td>
+        <td>¥${parseFloat(room.internet_fee).toFixed(2)}</td>
         <td>
             <button onclick="editRoom(${room.id})" class="btn btn-small">编辑</button>
             <a href="/rooms/${room.id}" class="btn btn-small">详情</a>
@@ -115,6 +117,8 @@ function editRoom(roomId) {
             document.getElementById('edit_monthly_rent').value = room.monthly_rent;
             document.getElementById('edit_electricity_rate').value = room.electricity_rate;
             document.getElementById('edit_water_rate').value = room.water_rate;
+            document.getElementById('edit_housekeeping_fee').value = room.housekeeping_fee || 0;
+            document.getElementById('edit_internet_fee').value = room.internet_fee || 0;
             document.getElementById('editRoomModal').style.display = 'block';
         })
         .catch(error => {
@@ -189,6 +193,8 @@ function updateRoomInTable(roomId, roomNumber, formData) {
         row.cells[1].textContent = `¥${parseFloat(formData.monthly_rent).toFixed(2)}`;
         row.cells[2].textContent = `¥${parseFloat(formData.electricity_rate).toFixed(2)}/度`;
         row.cells[3].textContent = `¥${parseFloat(formData.water_rate).toFixed(2)}/吨`;
+        row.cells[4].textContent = `¥${parseFloat(formData.housekeeping_fee).toFixed(2)}`;
+        row.cells[5].textContent = `¥${parseFloat(formData.internet_fee).toFixed(2)}`;
     }
 }
 

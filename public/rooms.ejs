@@ -31,6 +31,8 @@
                     <th>月租金</th>
                     <th>电费单价</th>
                     <th>水费单价</th>
+                    <th>卫生费</th>
+                    <th>网费</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -41,6 +43,8 @@
                         <td>¥<%= room.monthly_rent.toFixed(2) %></td>
                         <td>¥<%= room.electricity_rate.toFixed(2) %>/度</td>
                         <td>¥<%= room.water_rate.toFixed(2) %>/吨</td>
+                        <td>¥<%= room.housekeeping_fee ? room.housekeeping_fee.toFixed(2) : '0.00' %></td>
+                        <td>¥<%= room.internet_fee ? room.internet_fee.toFixed(2) : '0.00' %></td>
                         <td>
                             <button onclick="editRoom(<%= room.id %>)" class="btn btn-small">编辑</button>
                             <a href="/rooms/<%= room.id %>" class="btn btn-small">详情</a>
@@ -72,6 +76,14 @@
                         <label>水费单价</label>
                         <input type="number" id="water_rate" step="0.01" required>
                     </div>
+                    <div class="form-group">
+                        <label>卫生费</label>
+                        <input type="number" id="housekeeping_fee" step="0.01" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>网费</label>
+                        <input type="number" id="internet_fee" step="0.01" value="0" required>
+                    </div>
                     <button type="submit" class="btn btn-primary">保存</button>
                 </form>
             </div>
@@ -98,6 +110,14 @@
                     <div class="form-group">
                         <label>水费单价</label>
                         <input type="number" id="edit_water_rate" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>卫生费</label>
+                        <input type="number" id="edit_housekeeping_fee" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>网费</label>
+                        <input type="number" id="edit_internet_fee" step="0.01" required>
                     </div>
                     <button type="submit" class="btn btn-primary">保存</button>
                 </form>

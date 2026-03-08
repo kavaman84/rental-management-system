@@ -192,8 +192,8 @@ app.post('/rooms/add', (req, res) => {
     const { room_number, monthly_rent, electricity_rate, water_rate } = req.body;
 
     db.run(
-        'INSERT INTO rooms (room_number, monthly_rent, electricity_rate, water_rate) VALUES (?, ?, ?, ?)',
-        [room_number, monthly_rent, electricity_rate, water_rate],
+        'INSERT INTO rooms (room_number, monthly_rent, electricity_rate, water_rate, housekeeping_fee, internet_fee) VALUES (?, ?, ?, ?, ?, ?)',
+        [room_number, monthly_rent, electricity_rate, water_rate, housekeeping_fee, internet_fee],
         (err) => {
             if (err) {
                 console.error('添加房间错误:', err);
@@ -266,8 +266,8 @@ app.post('/rooms/:id/update', (req, res) => {
     const { room_number, monthly_rent, electricity_rate, water_rate } = req.body;
 
     db.run(
-        'UPDATE rooms SET room_number = ?, monthly_rent = ?, electricity_rate = ?, water_rate = ? WHERE id = ?',
-        [room_number, monthly_rent, electricity_rate, water_rate, roomId],
+        'UPDATE rooms SET room_number = ?, monthly_rent = ?, electricity_rate = ?, water_rate = ?, housekeeping_fee = ?, internet_fee = ? WHERE id = ?',
+        [room_number, monthly_rent, electricity_rate, water_rate, housekeeping_fee, internet_fee, roomId],
         (err) => {
             if (err) {
                 console.error('更新房间信息错误:', err);
