@@ -426,8 +426,8 @@ app.get('/receipts/meter-readings/:roomId/:month', (req, res) => {
         lastYear = year - 1;
     }
 
-    // 格式化上个月份为 "YYYY-MM"
-    const lastMonthStr = `${String(lastYear).padStart(4, '0')}-${String(lastMonth).padStart(2, '0')}`;
+    // 格式化上个月份为 "YYYY-MM-01"
+    const lastMonthStr = `${String(lastYear).padStart(4, '0')}-${String(lastMonth).padStart(2, '0')}-01`;
 
     // 查询上个月的水电读数
     db.get(
