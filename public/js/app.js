@@ -484,3 +484,28 @@ function deleteReceipt(receiptId) {
         });
     }
 }
+
+// 支付收据
+function payReceipt(receiptId) {
+    if (confirm('确定要标记为已支付吗？')) {
+        fetch(`/receipts/${receiptId}/pay`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('支付收据错误:', error);
+            alert('支付失败，请重试');
+        });
+    }
+}
