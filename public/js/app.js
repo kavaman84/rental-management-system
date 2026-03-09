@@ -405,10 +405,19 @@ function showEditReceiptModal(receiptId) {
             if (receipt) {
                 document.getElementById('edit_receipt_id').value = receipt.id;
                 document.getElementById('edit_receipt_month').value = receipt.receipt_month;
-                document.getElementById('edit_monthly_rent').value = receipt.monthly_rent;
-                document.getElementById('edit_electricity_amount').value = receipt.electricity_amount;
-                document.getElementById('edit_water_amount').value = receipt.water_amount;
-                document.getElementById('edit_total_amount').value = receipt.total_amount;
+                // 只设置表单中实际存在的字段
+                if (receipt.electricity_before !== undefined) {
+                    document.getElementById('edit_electricity_before').value = receipt.electricity_before;
+                }
+                if (receipt.electricity_after !== undefined) {
+                    document.getElementById('edit_electricity_after').value = receipt.electricity_after;
+                }
+                if (receipt.water_before !== undefined) {
+                    document.getElementById('edit_water_before').value = receipt.water_before;
+                }
+                if (receipt.water_after !== undefined) {
+                    document.getElementById('edit_water_after').value = receipt.water_after;
+                }
                 document.getElementById('editReceiptModal').style.display = 'block';
             } else {
                 alert('获取收据信息失败');
