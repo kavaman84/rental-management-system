@@ -491,3 +491,19 @@ header h1 {
 .btn-success:hover {
     background-color: #218838;
 }
+
+/* 按钮样式 */
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}

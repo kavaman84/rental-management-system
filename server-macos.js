@@ -689,6 +689,65 @@ app.get('/logout', (req, res) => {
     res.redirect('/dashboard');
 });
 
+// 获取房间所有收据明细
+app.get('/rooms/:id/receipts', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/dashboard');
+    }
+
+    const roomId = req.params.id;
+
+    // 获取房间信息
+    db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
+        if (err) {
+            console.error('获取房间信息错误:', err);
+            return res.status(500).send('服务器错误');
+        }
+
+        if (!room) {
+            return res.status(404).send('房间不存在');
+        }
+
+        // 获取该房间的所有收据
+        db.all(
+            `SELECT
+                r.*,
+                room_number,
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = r.room_id
+                 AND reading_date < r.receipt_month
+                 ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = r.room_id
+                 AND reading_date < r.receipt_month
+                 ORDER BY reading_date DESC LIMIT 1) AS water_before,
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = r.room_id
+                 AND reading_date = r.receipt_month) AS electricity_after,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = r.room_id
+                 AND reading_date = r.receipt_month) AS water_after
+            FROM receipts r
+            JOIN rooms ON r.room_id = rooms.id
+            WHERE r.room_id = ?
+            ORDER BY r.receipt_month DESC`,
+            [roomId],
+            (err, receipts) => {
+                if (err) {
+                    console.error('获取收据列表错误:', err);
+                    return res.status(500).send('服务器错误');
+                }
+
+                res.render('room-receipts', {
+                    room,
+                    receipts,
+                    username: req.session.username
+                });
+            }
+        );
+    });
+});
+
 // 404
 app.use((req, res) => {
     res.status(404).render('404');

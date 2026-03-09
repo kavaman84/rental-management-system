@@ -101,6 +101,7 @@
                                 </td>
                                 <td>
                                     <button onclick="showEditReceiptModal(<%= receipt.id %>)" class="btn btn-small btn-warning">修改</button>
+                                    <a href="/rooms/<%= receipt.room_id %>/receipts" class="btn btn-small btn-info">明细</a>
                                     <button onclick="deleteReceipt(<%= receipt.id %>)" class="btn btn-small btn-danger">删除</button>
                                 </td>
                             </tr>
