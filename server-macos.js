@@ -363,11 +363,11 @@ app.get('/receipts', (req, res) => {
                 room_number,
                 (SELECT electricity_after FROM meter_readings
                  WHERE room_id = r.room_id
-                 AND reading_date < r.receipt_month
+                 AND reading_date = DATE_SUB(r.receipt_month, INTERVAL 1 MONTH)
                  ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
                 (SELECT water_after FROM meter_readings
                  WHERE room_id = r.room_id
-                 AND reading_date < r.receipt_month
+                 AND reading_date = DATE_SUB(r.receipt_month, INTERVAL 1 MONTH)
                  ORDER BY reading_date DESC LIMIT 1) AS water_before,
                 (SELECT electricity_after FROM meter_readings
                  WHERE room_id = r.room_id
