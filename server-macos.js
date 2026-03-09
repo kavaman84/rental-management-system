@@ -367,7 +367,7 @@ app.get('/receipts', (req, res) => {
                  ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
                 (SELECT water_after FROM meter_readings
                  WHERE room_id = r.room_id
-                 AND reading_date LIKE substr(r.receipt_month, 1, 7) || '-01%'
+                 AND reading_date LIKE date(substr(r.receipt_month, 1, 7) || '-01', '-1 month') || '-01%'
                  ORDER BY reading_date DESC LIMIT 1) AS water_before,
                 (SELECT electricity_after FROM meter_readings
                  WHERE room_id = r.room_id
