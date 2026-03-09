@@ -515,7 +515,7 @@ app.post('/receipts/generate', (req, res) => {
                 'INSERT INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after) VALUES (?, ?, ?, ?, ?, ?)',
                 [
                     roomId,
-                    receiptMonth,
+                    receiptMonth || '-01',
                     electricityBefore,
                     electricityAfter,
                     waterBefore,
