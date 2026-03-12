@@ -7,7 +7,9 @@ if (document.getElementById('addRoomForm')) {
             room_number: document.getElementById('room_number').value,
             monthly_rent: document.getElementById('monthly_rent').value,
             electricity_rate: document.getElementById('electricity_rate').value,
-            water_rate: document.getElementById('water_rate').value
+            water_rate: document.getElementById('water_rate').value,
+            housekeeping_fee: document.getElementById('housekeeping_fee').value,
+            internet_fee: document.getElementById('internet_fee').value
         };
 
         fetch('/rooms/add', {

@@ -108,6 +108,28 @@ app.get('/login', (req, res) => {
 
 // 登录处理
 app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    db.get('SELECT * FROM admins WHERE username = ?', [username], (err, admin) => {
+        if (err) {
+            console.error('登录错误:', err);
+            return res.status(500).send('服务器错误');
+        }
+
+        if (!admin) {
+            return res.render('login', { error: '用户名或密码错误' });
+        }
+
+        if (admin.password === password) {
+            req.session.adminId = admin.id;
+            req.session.username = admin.username;
+            res.redirect('/dashboard');
+        } else {
+            res.render('login', { error: '用户名或密码错误' });
+        }
+    });
+});
+
 // 仪表板
 app.get('/dashboard', (req, res) => {
     if (!req.session.adminId) {
@@ -137,7 +159,8 @@ app.get('/dashboard', (req, res) => {
                         receipts,
                         receiptStats,
                         unpaidCount,
-                        username: req.session.username
+                        username: req.session.username,
+                        rooms: rooms
                     });
                 });
             });
@@ -247,11 +270,11 @@ app.post('/rooms/:id/update', (req, res) => {
     }
 
     const roomId = req.params.id;
-    const { monthly_rent, tax_rate, electricity_rate, water_rate } = req.body;
+    const { monthly_rent, tax_rate, electricity_rate, water_rate, housekeeping_fee, internet_fee } = req.body;
 
     db.run(
-        'UPDATE rooms SET monthly_rent = ?, tax_rate = ?, electricity_rate = ?, water_rate = ? WHERE id = ?',
-        [monthly_rent, tax_rate, electricity_rate, water_rate, roomId],
+        'UPDATE rooms SET monthly_rent = ?, tax_rate = ?, electricity_rate = ?, water_rate = ?, housekeeping_fee = ?, internet_fee = ? WHERE id = ?',
+        [monthly_rent, tax_rate, electricity_rate, water_rate, housekeeping_fee, internet_fee, roomId],
         (err) => {
             if (err) {
                 console.error('更新房间信息错误:', err);
@@ -273,28 +296,36 @@ app.get('/receipts', (req, res) => {
     const limit = 10;
     const offset = (page - 1) * limit;
 
-    db.all(
-        'SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id ORDER BY r.receipt_month DESC, r.room_id ASC LIMIT ? OFFSET ?',
-        [limit, offset],
-        (err, receipts) => {
-            if (err) {
-                console.error('获取收据列表错误:', err);
-                return res.status(500).send('服务器错误');
-            }
-
-            db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
-                const total = result.total;
-                const totalPages = Math.ceil(total / limit);
-
-                res.render('receipts', {
-                    receipts,
-                    currentPage: page,
-                    totalPages,
-                    username: req.session.username
-                });
-            });
+    db.all('SELECT * FROM rooms ORDER BY room_number', (err, rooms) => {
+        if (err) {
+            console.error('获取房间列表错误:', err);
+            return res.status(500).send('服务器错误');
         }
-    );
+
+        db.all(
+            'SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id ORDER BY r.receipt_month DESC, r.room_id ASC LIMIT ? OFFSET ?',
+            [limit, offset],
+            (err, receipts) => {
+                if (err) {
+                    console.error('获取收据列表错误:', err);
+                    return res.status(500).send('服务器错误');
+                }
+
+                db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
+                    const total = result.total;
+                    const totalPages = Math.ceil(total / limit);
+
+                    res.render('receipts', {
+                        receipts,
+                        currentPage: page,
+                        totalPages,
+                        username: req.session.username,
+                        rooms
+                    });
+                });
+            }
+        );
+    });
 });
 
 // 生成月收据
@@ -350,7 +381,9 @@ app.post('/receipts/generate', (req, res) => {
                 const waterConsumption = Math.max(0, waterAfter - waterBefore);
                 const electricityAmount = electricityConsumption * parseFloat(room.electricity_rate);
                 const waterAmount = waterConsumption * parseFloat(room.water_rate);
-                const totalAmount = monthlyRent + taxAmount + electricityAmount + waterAmount;
+                const housekeepingFee = parseFloat(room.housekeeping_fee) || 0;
+                const internetFee = parseFloat(room.internet_fee) || 0;
+                const totalAmount = monthlyRent + taxAmount + electricityAmount + waterAmount + housekeepingFee + internetFee;
 
                 db.get('SELECT * FROM receipts WHERE room_id = ? AND receipt_month = ?', [roomId, receiptMonth], (err, existingReceipts) => {
                     if (err) {
@@ -363,7 +396,7 @@ app.post('/receipts/generate', (req, res) => {
                     }
 
                     db.run(
-                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [
                             roomId,
                             receiptMonth,
@@ -371,6 +404,8 @@ app.post('/receipts/generate', (req, res) => {
                             taxAmount,
                             electricityAmount,
                             waterAmount,
+                            housekeepingFee,
+                            internetFee,
                             totalAmount,
                             electricityConsumption,
                             waterConsumption,
@@ -392,6 +427,8 @@ app.post('/receipts/generate', (req, res) => {
                                     tax_amount: taxAmount,
                                     electricity_amount: electricityAmount,
                                     water_amount: waterAmount,
+                                    housekeeping_fee: housekeepingFee,
+                                    internet_fee: internetFee,
                                     total_amount: totalAmount,
                                     electricity_consumption: electricityConsumption,
                                     water_consumption: waterConsumption
