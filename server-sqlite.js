@@ -374,14 +374,13 @@ app.post('/receipts/generate', (req, res) => {
                 }
 
                 const monthlyRent = parseFloat(room.monthly_rent);
-                const taxAmount = monthlyRent * parseFloat(room.tax_rate);
                 const electricityConsumption = Math.max(0, electricityAfter - electricityBefore);
                 const waterConsumption = Math.max(0, waterAfter - waterBefore);
                 const electricityAmount = electricityConsumption * parseFloat(room.electricity_rate);
                 const waterAmount = waterConsumption * parseFloat(room.water_rate);
                 const housekeepingFee = parseFloat(room.housekeeping_fee) || 0;
                 const internetFee = parseFloat(room.internet_fee) || 0;
-                const totalAmount = monthlyRent + taxAmount + electricityAmount + waterAmount + housekeepingFee + internetFee;
+                const totalAmount = monthlyRent + electricityAmount + waterAmount + housekeepingFee + internetFee;
 
                 db.get('SELECT * FROM receipts WHERE room_id = ? AND receipt_month = ?', [roomId, receiptMonth], (err, existingReceipts) => {
                     if (err) {
@@ -393,13 +392,21 @@ app.post('/receipts/generate', (req, res) => {
                         return res.status(400).json({ success: false, message: '该月份的收据已存在' });
                     }
 
+                    console.log('准备插入收据数据:', {
+                        roomId,
+                        receiptMonth,
+                        electricityBefore,
+                        electricityAfter,
+                        waterBefore,
+                        waterAfter
+                    });
+
                     db.run(
-                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [
                             roomId,
                             receiptMonth,
                             monthlyRent,
-                            taxAmount,
                             electricityAmount,
                             waterAmount,
                             housekeepingFee,
@@ -419,6 +426,13 @@ app.post('/receipts/generate', (req, res) => {
                                 return res.status(500).json({ success: false, message: '创建收据失败' });
                             }
 
+                            console.log('收据创建成功，插入的值:', {
+                                electricityBefore,
+                                electricityAfter,
+                                waterBefore,
+                                waterAfter
+                            });
+
                             res.json({
                                 success: true,
                                 message: '收据生成成功',
@@ -426,7 +440,6 @@ app.post('/receipts/generate', (req, res) => {
                                     room_number: room.room_number,
                                     receipt_month: receiptMonth,
                                     monthly_rent: monthlyRent,
-                                    tax_amount: taxAmount,
                                     electricity_amount: electricityAmount,
                                     water_amount: waterAmount,
                                     housekeeping_fee: housekeepingFee,
