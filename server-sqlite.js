@@ -311,10 +311,30 @@ app.get('/receipts', (req, res) => {
                     return res.status(500).send('服务器错误');
                 }
 
-                db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
-                    const total = result.total;
-                    const totalPages = Math.ceil(total / limit);
+                // 为每条收据添加房间电表和水表读数信息
+                const promises = receipts.map(receipt => {
+                    return new Promise((resolve) => {
+                        db.get('SELECT * FROM meter_readings WHERE room_id = ? AND reading_date = ? ORDER BY id DESC LIMIT 1', [receipt.room_id, receipt.receipt_month], (err, readings) => {
+                            if (err) {
+                                console.error('获取读数错误:', err);
+                            }
+                            if (readings) {
+                                receipt.electricity_before = readings.electricity_before;
+                                receipt.electricity_after = readings.electricity_after;
+                                receipt.water_before = readings.water_before;
+                                receipt.water_after = readings.water_after;
+                            } else {
+                                receipt.electricity_before = 0;
+                                receipt.electricity_after = 0;
+                                receipt.water_before = 0;
+                                receipt.water_after = 0;
+                            }
+                            resolve();
+                        });
+                    });
+                });
 
+                Promise.all(promises).then(() => {
                     res.render('receipts', {
                         receipts,
                         currentPage: page,
@@ -323,10 +343,6 @@ app.get('/receipts', (req, res) => {
                         rooms
                     });
                 });
-            }
-        );
-    });
-});
 
 // 生成月收据
 app.post('/receipts/generate', (req, res) => {
@@ -396,7 +412,7 @@ app.post('/receipts/generate', (req, res) => {
                     }
 
                     db.run(
-                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [
                             roomId,
                             receiptMonth,
@@ -409,6 +425,10 @@ app.post('/receipts/generate', (req, res) => {
                             totalAmount,
                             electricityConsumption,
                             waterConsumption,
+                            electricityBefore,
+                            electricityAfter,
+                            waterBefore,
+                            waterAfter,
                             'pending'
                         ],
                         (err) => {
