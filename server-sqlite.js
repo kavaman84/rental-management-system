@@ -363,8 +363,12 @@ app.post('/receipts/generate', (req, res) => {
                 let electricityAfter = electricityBefore;
                 let waterAfter = waterBefore;
 
-                // 如果没有找到当月的读数，尝试查找最新的读数
-                if (!currentReadings && readings) {
+                // 如果有当月的读数，使用当月读数
+                if (currentReadings) {
+                    electricityAfter = currentReadings.electricity_after;
+                    waterAfter = currentReadings.water_after;
+                } else if (readings) {
+                    // 如果没有当月读数，使用之前的读数作为参考
                     electricityAfter = readings.electricity_after;
                     waterAfter = readings.water_after;
                 }
