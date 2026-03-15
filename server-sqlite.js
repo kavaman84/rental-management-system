@@ -273,22 +273,35 @@ app.get('/receipts', (req, res) => {
                     // 为每条收据添加房间电表和水表读数信息
                     const promises = receipts.map(receipt => {
                         return new Promise((resolve) => {
-                            db.get('SELECT * FROM meter_readings WHERE room_id = ? AND reading_date = ? ORDER BY id DESC LIMIT 1', [receipt.room_id, receipt.receipt_month], (err, readings) => {
-                                if (err) {
-                                    console.error('获取读数错误:', err);
-                                }
-                                if (readings) {
-                                    receipt.electricity_before = readings.electricity_before;
-                                    receipt.electricity_after = readings.electricity_after;
-                                    receipt.water_before = readings.water_before;
-                                    receipt.water_after = readings.water_after;
-                                } else {
-                                    receipt.electricity_before = 0;
-                                    receipt.electricity_after = 0;
-                                    receipt.water_before = 0;
-                                    receipt.water_after = 0;
-                                }
-                                resolve();
+                            // 查找该房间在收据月份之前的最近一次读数
+                            db.get('SELECT * FROM meter_readings WHERE room_id = ? AND reading_date < ? ORDER BY reading_date DESC LIMIT 1', [receipt.room_id, receipt.receipt_month], (err, previousReadings) => {
+                                // 查找该月份的读数（如果有）
+                                db.get('SELECT * FROM meter_readings WHERE room_id = ? AND reading_date = ? ORDER BY id DESC LIMIT 1', [receipt.room_id, receipt.receipt_month], (err, currentReadings) => {
+                                    if (err) {
+                                        console.error('获取读数错误:', err);
+                                    }
+
+                                    if (currentReadings) {
+                                        // 如果有当月的读数，使用当月的读数
+                                        receipt.electricity_before = previousReadings ? previousReadings.electricity_after : currentReadings.electricity_before;
+                                        receipt.electricity_after = currentReadings.electricity_after;
+                                        receipt.water_before = previousReadings ? previousReadings.water_after : currentReadings.water_before;
+                                        receipt.water_after = currentReadings.water_after;
+                                    } else if (previousReadings) {
+                                        // 如果没有当月读数，但有过往读数，使用上次读数
+                                        receipt.electricity_before = previousReadings.electricity_after;
+                                        receipt.electricity_after = previousReadings.electricity_after;
+                                        receipt.water_before = previousReadings.water_after;
+                                        receipt.water_after = previousReadings.water_after;
+                                    } else {
+                                        // 没有任何读数
+                                        receipt.electricity_before = 0;
+                                        receipt.electricity_after = 0;
+                                        receipt.water_before = 0;
+                                        receipt.water_after = 0;
+                                    }
+                                    resolve();
+                                });
                             });
                         });
                     });
@@ -350,9 +363,10 @@ app.post('/receipts/generate', (req, res) => {
                 let electricityAfter = electricityBefore;
                 let waterAfter = waterBefore;
 
-                if (currentReadings) {
-                    electricityAfter = currentReadings.electricity_after;
-                    waterAfter = currentReadings.water_after;
+                // 如果没有找到当月的读数，尝试查找最新的读数
+                if (!currentReadings && readings) {
+                    electricityAfter = readings.electricity_after;
+                    waterAfter = readings.water_after;
                 }
 
                 const monthlyRent = parseFloat(room.monthly_rent);
