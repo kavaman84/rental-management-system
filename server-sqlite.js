@@ -159,59 +159,8 @@ app.get('/dashboard', (req, res) => {
                         receipts,
                         receiptStats,
                         unpaidCount,
-                        username: req.session.username,
-                        rooms: rooms
+                        username: req.session.username
                     });
-                });
-            });
-        });
-    });
-});
-    const { username, password } = req.body;
-
-    db.get('SELECT * FROM admins WHERE username = ?', [username], (err, admin) => {
-        if (err) {
-            console.error('登录错误:', err);
-            return res.status(500).send('服务器错误');
-        }
-
-        if (!admin) {
-            return res.render('login', { error: '用户名或密码错误' });
-        }
-
-        if (admin.password === password) {
-            req.session.adminId = admin.id;
-            req.session.username = admin.username;
-            res.redirect('/dashboard');
-        } else {
-            res.render('login', { error: '用户名或密码错误' });
-        }
-    });
-});
-
-// 仪表板
-app.get('/dashboard', (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/login');
-    }
-
-    db.all('SELECT * FROM rooms ORDER BY room_number', (err, rooms) => {
-        if (err) {
-            console.error('获取房间列表错误:', err);
-            return res.status(500).send('服务器错误');
-        }
-
-        db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
-            const receiptStats = result;
-
-            db.get('SELECT COUNT(*) as unpaid FROM receipts WHERE status = "pending"', (err, result) => {
-                const unpaidCount = result.unpaid;
-
-                res.render('dashboard', {
-                    rooms,
-                    receiptStats,
-                    unpaidCount,
-                    username: req.session.username
                 });
             });
         });
@@ -311,38 +260,53 @@ app.get('/receipts', (req, res) => {
                     return res.status(500).send('服务器错误');
                 }
 
-                // 为每条收据添加房间电表和水表读数信息
-                const promises = receipts.map(receipt => {
-                    return new Promise((resolve) => {
-                        db.get('SELECT * FROM meter_readings WHERE room_id = ? AND reading_date = ? ORDER BY id DESC LIMIT 1', [receipt.room_id, receipt.receipt_month], (err, readings) => {
-                            if (err) {
-                                console.error('获取读数错误:', err);
-                            }
-                            if (readings) {
-                                receipt.electricity_before = readings.electricity_before;
-                                receipt.electricity_after = readings.electricity_after;
-                                receipt.water_before = readings.water_before;
-                                receipt.water_after = readings.water_after;
-                            } else {
-                                receipt.electricity_before = 0;
-                                receipt.electricity_after = 0;
-                                receipt.water_before = 0;
-                                receipt.water_after = 0;
-                            }
-                            resolve();
+                // 获取总记录数
+                db.get('SELECT COUNT(*) as total FROM receipts', (err, result) => {
+                    if (err) {
+                        console.error('获取总记录数错误:', err);
+                        return res.status(500).send('服务器错误');
+                    }
+
+                    const total = result.total;
+                    const totalPages = Math.ceil(total / limit);
+
+                    // 为每条收据添加房间电表和水表读数信息
+                    const promises = receipts.map(receipt => {
+                        return new Promise((resolve) => {
+                            db.get('SELECT * FROM meter_readings WHERE room_id = ? AND reading_date = ? ORDER BY id DESC LIMIT 1', [receipt.room_id, receipt.receipt_month], (err, readings) => {
+                                if (err) {
+                                    console.error('获取读数错误:', err);
+                                }
+                                if (readings) {
+                                    receipt.electricity_before = readings.electricity_before;
+                                    receipt.electricity_after = readings.electricity_after;
+                                    receipt.water_before = readings.water_before;
+                                    receipt.water_after = readings.water_after;
+                                } else {
+                                    receipt.electricity_before = 0;
+                                    receipt.electricity_after = 0;
+                                    receipt.water_before = 0;
+                                    receipt.water_after = 0;
+                                }
+                                resolve();
+                            });
+                        });
+                    });
+
+                    Promise.all(promises).then(() => {
+                        res.render('receipts', {
+                            receipts,
+                            currentPage: page,
+                            totalPages,
+                            username: req.session.username,
+                            rooms
                         });
                     });
                 });
-
-                Promise.all(promises).then(() => {
-                    res.render('receipts', {
-                        receipts,
-                        currentPage: page,
-                        totalPages,
-                        username: req.session.username,
-                        rooms
-                    });
-                });
+            }
+        );
+    });
+});
 
 // 生成月收据
 app.post('/receipts/generate', (req, res) => {
