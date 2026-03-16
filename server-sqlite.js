@@ -216,7 +216,15 @@ app.get('/rooms/:id', (req, res) => {
             return res.status(404).send('房间不存在');
         }
 
-        res.render('room-detail', { room, username: req.session.username });
+        // 获取该房间的读数记录
+        db.all('SELECT * FROM meter_readings WHERE room_id = ? ORDER BY reading_date DESC', [roomId], (err, readings) => {
+            if (err) {
+                console.error('获取读数记录错误:', err);
+                readings = [];
+            }
+
+            res.render('room-detail', { room, readings, username: req.session.username });
+        });
     });
 });
 
