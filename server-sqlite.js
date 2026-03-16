@@ -324,13 +324,15 @@ app.get('/rooms/:id/meter-readings', (req, res) => {
     });
 });
 
-// 获取单个房间的单个电表水表读数记录
+// 获取单个房间的单个电表水表读数记录（放在前面，更具体的路由）
 app.get('/rooms/:id/meter-readings/:readingId', (req, res) => {
     if (!req.session.adminId) {
         return res.redirect('/login');
     }
 
     const { id, readingId } = req.params;
+
+    console.log('获取单个读数，房间ID:', id, '读数ID:', readingId);
 
     db.get('SELECT * FROM meter_readings WHERE id = ?', [readingId], (err, reading) => {
         if (err) {
@@ -341,6 +343,8 @@ app.get('/rooms/:id/meter-readings/:readingId', (req, res) => {
         if (!reading) {
             return res.status(404).json({ success: false, message: '读数不存在' });
         }
+
+        console.log('找到读数:', reading);
 
         res.json({
             success: true,
@@ -431,38 +435,6 @@ app.delete('/rooms/:id/meter-readings/:readingId', (req, res) => {
         }
 
         res.json({ success: true, message: '删除成功' });
-    });
-});
-
-// 获取单个电表水表读数记录
-app.get('/rooms/meter-readings/:readingId', (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/login');
-    }
-
-    const readingId = req.params.readingId;
-
-    db.get('SELECT * FROM meter_readings WHERE id = ?', [readingId], (err, reading) => {
-        if (err) {
-            console.error('获取读数错误:', err);
-            return res.status(500).json({ success: false, message: '服务器错误' });
-        }
-
-        if (!reading) {
-            return res.status(404).json({ success: false, message: '读数不存在' });
-        }
-
-        res.json({
-            success: true,
-            reading: {
-                id: reading.id,
-                reading_date: reading.reading_date,
-                electricity_before: reading.electricity_before,
-                electricity_after: reading.electricity_after,
-                water_before: reading.water_before,
-                water_after: reading.water_after
-            }
-        });
     });
 });
 
