@@ -207,7 +207,7 @@ app.get('/rooms/:id', (req, res) => {
                 return res.status(500).send('服务器错误');
             }
 
-            res.render('room-detail', { room, readings });
+            res.render('room-detail', { room, readings, username: req.session.username });
         });
     });
 });
