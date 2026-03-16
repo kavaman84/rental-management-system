@@ -111,17 +111,21 @@ function deleteRoom(roomId) {
 
 // 编辑房间
 function editRoom(roomId) {
-    fetch(`/rooms/${roomId}`)
+    fetch(`/rooms/${roomId}/json`)
         .then(response => response.json())
         .then(room => {
-            document.getElementById('edit_room_id').value = room.id;
-            document.getElementById('edit_room_number').value = room.room_number;
-            document.getElementById('edit_monthly_rent').value = room.monthly_rent;
-            document.getElementById('edit_electricity_rate').value = room.electricity_rate;
-            document.getElementById('edit_water_rate').value = room.water_rate;
-            document.getElementById('edit_housekeeping_fee').value = room.housekeeping_fee || 0;
-            document.getElementById('edit_internet_fee').value = room.internet_fee || 0;
-            document.getElementById('editRoomModal').style.display = 'block';
+            if (room.success) {
+                document.getElementById('edit_room_id').value = room.room.id;
+                document.getElementById('edit_room_number').value = room.room.room_number;
+                document.getElementById('edit_monthly_rent').value = room.room.monthly_rent;
+                document.getElementById('edit_electricity_rate').value = room.room.electricity_rate;
+                document.getElementById('edit_water_rate').value = room.room.water_rate;
+                document.getElementById('edit_housekeeping_fee').value = room.room.housekeeping_fee || 0;
+                document.getElementById('edit_internet_fee').value = room.room.internet_fee || 0;
+                document.getElementById('editRoomModal').style.display = 'block';
+            } else {
+                alert(room.message || '获取房间信息失败');
+            }
         })
         .catch(error => {
             console.error('获取房间信息错误:', error);

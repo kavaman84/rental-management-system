@@ -208,6 +208,28 @@ app.get('/rooms/:id', (req, res) => {
 
     db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
         if (err) {
+            console.error('获取房间详情错误:', err);
+            return res.status(500).send('服务器错误');
+        }
+
+        if (!room) {
+            return res.status(404).send('房间不存在');
+        }
+
+        res.render('room-detail', { room, username: req.session.username });
+    });
+});
+
+// 获取房间数据（JSON格式，用于编辑）
+app.get('/rooms/:id/json', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const roomId = req.params.id;
+
+    db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
+        if (err) {
             console.error('获取房间信息错误:', err);
             return res.status(500).json({ success: false, message: '服务器错误' });
         }
@@ -239,11 +261,11 @@ app.post('/rooms/:id/update', (req, res) => {
     }
 
     const roomId = req.params.id;
-    const { monthly_rent, tax_rate, electricity_rate, water_rate, housekeeping_fee, internet_fee } = req.body;
+    const { room_number, monthly_rent, tax_rate, electricity_rate, water_rate, housekeeping_fee, internet_fee } = req.body;
 
     db.run(
-        'UPDATE rooms SET monthly_rent = ?, tax_rate = ?, electricity_rate = ?, water_rate = ?, housekeeping_fee = ?, internet_fee = ? WHERE id = ?',
-        [monthly_rent, tax_rate, electricity_rate, water_rate, housekeeping_fee, internet_fee, roomId],
+        'UPDATE rooms SET room_number = ?, monthly_rent = ?, tax_rate = ?, electricity_rate = ?, water_rate = ?, housekeeping_fee = ?, internet_fee = ? WHERE id = ?',
+        [room_number, monthly_rent, tax_rate, electricity_rate, water_rate, housekeeping_fee, internet_fee, roomId],
         (err) => {
             if (err) {
                 console.error('更新房间信息错误:', err);
