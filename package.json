@@ -4,7 +4,7 @@
   "description": "出租屋租赁管理系统",
   "main": "server.js",
   "scripts": {
-    "start": "node server-macos.js",
+    "start": "node server-sqlite.js",
     "dev": "nodemon server-macos.js"
   },
   "dependencies": {
