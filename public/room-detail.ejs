@@ -84,7 +84,7 @@
                 <tbody>
                     <% if (readings && readings.length > 0) { %>
                         <% readings.forEach(reading => { %>
-                            <tr data-reading-id="<%= reading.id %>">
+                            <tr data-reading-id="<%= reading.id %>" data-room-id="<%= room.id %>">
                                 <td><%= reading.reading_date %></td>
                                 <td>
                                     电表: <%= reading.electricity_before %> → <%= reading.electricity_after %>

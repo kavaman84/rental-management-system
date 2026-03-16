@@ -310,19 +310,28 @@ function updateMeterReadings() {
 
 // 编辑电表水表读数
 function editReading(readingId) {
-    fetch(`/rooms/meter-readings/${readingId}`)
+    // 获取房间ID
+    const row = document.querySelector(`tr[data-reading-id="${readingId}"]`);
+    const roomId = row ? row.getAttribute('data-room-id') : null;
+
+    if (!roomId) {
+        alert('无法获取房间ID');
+        return;
+    }
+
+    fetch(`/rooms/${roomId}/meter-readings/${readingId}`)
         .then(response => response.json())
         .then(reading => {
             if (reading.success) {
-                document.getElementById('edit_reading_id').value = reading.id;
-                document.getElementById('edit_reading_date').value = reading.reading_date;
-                document.getElementById('edit_electricity_before').value = reading.electricity_before;
-                document.getElementById('edit_electricity_after').value = reading.electricity_after;
-                document.getElementById('edit_water_before').value = reading.water_before;
-                document.getElementById('edit_water_after').value = reading.water_after;
+                document.getElementById('edit_reading_id').value = reading.reading.id;
+                document.getElementById('edit_reading_date').value = reading.reading.reading_date;
+                document.getElementById('edit_electricity_before').value = reading.reading.electricity_before;
+                document.getElementById('edit_electricity_after').value = reading.reading.electricity_after;
+                document.getElementById('edit_water_before').value = reading.reading.water_before;
+                document.getElementById('edit_water_after').value = reading.reading.water_after;
                 document.getElementById('editReadingModal').style.display = 'block';
             } else {
-                alert('获取读数失败');
+                alert(reading.message || '获取读数失败');
             }
         })
         .catch(error => {
@@ -334,7 +343,16 @@ function editReading(readingId) {
 // 删除电表水表读数
 function deleteReading(readingId) {
     if (confirm('确定要删除这条读数记录吗？')) {
-        fetch(`/rooms/meter-readings/${readingId}`, {
+        // 获取房间ID
+        const row = document.querySelector(`tr[data-reading-id="${readingId}"]`);
+        const roomId = row ? row.getAttribute('data-room-id') : null;
+
+        if (!roomId) {
+            alert('无法获取房间ID');
+            return;
+        }
+
+        fetch(`/rooms/${roomId}/meter-readings/${readingId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
