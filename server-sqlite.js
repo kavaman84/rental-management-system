@@ -46,6 +46,10 @@ db.serialize(() => {
         total_amount REAL NOT NULL,
         electricity_consumption REAL,
         water_consumption REAL,
+        electricity_before REAL DEFAULT 0,
+        electricity_after REAL DEFAULT 0,
+        water_before REAL DEFAULT 0,
+        water_after REAL DEFAULT 0,
         status TEXT DEFAULT 'pending',
         receipt_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
@@ -61,6 +65,37 @@ db.serialize(() => {
 
     // 插入示例管理员
     db.run(`INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)`, ['admin', 'admin123']);
+
+    // 检查并添加电表水表读数字段到 receipts 表
+    db.all("PRAGMA table_info(receipts)", (err, columns) => {
+        if (err) {
+            console.error('检查 receipts 表结构错误:', err);
+            return;
+        }
+
+        const fieldNames = columns.map(c => c.name);
+
+        // 添加电表水表读数字段
+        if (!fieldNames.includes('electricity_before')) {
+            console.log('添加 electricity_before 字段到 receipts 表...');
+            db.run('ALTER TABLE receipts ADD COLUMN electricity_before REAL DEFAULT 0');
+        }
+
+        if (!fieldNames.includes('electricity_after')) {
+            console.log('添加 electricity_after 字段到 receipts 表...');
+            db.run('ALTER TABLE receipts ADD COLUMN electricity_after REAL DEFAULT 0');
+        }
+
+        if (!fieldNames.includes('water_before')) {
+            console.log('添加 water_before 字段到 receipts 表...');
+            db.run('ALTER TABLE receipts ADD COLUMN water_before REAL DEFAULT 0');
+        }
+
+        if (!fieldNames.includes('water_after')) {
+            console.log('添加 water_after 字段到 receipts 表...');
+            db.run('ALTER TABLE receipts ADD COLUMN water_after REAL DEFAULT 0');
+        }
+    });
 });
 
 // 中间件
