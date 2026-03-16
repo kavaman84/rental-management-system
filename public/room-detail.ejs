@@ -78,12 +78,13 @@
                         <th>日期</th>
                         <th>电表（度）</th>
                         <th>水表（吨）</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% if (readings && readings.length > 0) { %>
                         <% readings.forEach(reading => { %>
-                            <tr>
+                            <tr data-reading-id="<%= reading.id %>">
                                 <td><%= reading.reading_date %></td>
                                 <td>
                                     电表: <%= reading.electricity_before %> → <%= reading.electricity_after %>
@@ -93,15 +94,50 @@
                                     水表: <%= reading.water_before %> → <%= reading.water_after %>
                                     (用水: <%= reading.water_after - reading.water_before %>)
                                 </td>
+                                <td>
+                                    <button onclick="editReading(<%= reading.id %>)" class="btn btn-small">编辑</button>
+                                    <button onclick="deleteReading(<%= reading.id %>)" class="btn btn-small btn-danger">删除</button>
+                                </td>
                             </tr>
                         <% }); %>
                     <% } else { %>
                         <tr>
-                            <td colspan="3" style="text-align: center;">暂无读数记录</td>
+                            <td colspan="4" style="text-align: center;">暂无读数记录</td>
                         </tr>
                     <% } %>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- 编辑读数模态框 -->
+    <div class="modal" id="editReadingModal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditReadingModal()">&times;</span>
+            <h3>编辑读数记录</h3>
+            <form id="editReadingForm">
+                <div class="form-group">
+                    <label for="edit_reading_date">日期</label>
+                    <input type="text" id="edit_reading_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_electricity_before">电表起始值</label>
+                    <input type="number" step="0.01" id="edit_electricity_before" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_electricity_after">电表结束值</label>
+                    <input type="number" step="0.01" id="edit_electricity_after" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_water_before">水表起始值</label>
+                    <input type="number" step="0.01" id="edit_water_before" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_water_after">水表结束值</label>
+                    <input type="number" step="0.01" id="edit_water_after" required>
+                </div>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+            </form>
         </div>
     </div>
 

@@ -304,6 +304,105 @@ function updateMeterReadings() {
         });
 }
 
+// 编辑电表水表读数
+function editReading(readingId) {
+    fetch(`/rooms/meter-readings/${readingId}`)
+        .then(response => response.json())
+        .then(reading => {
+            if (reading.success) {
+                document.getElementById('edit_reading_id').value = reading.id;
+                document.getElementById('edit_reading_date').value = reading.reading_date;
+                document.getElementById('edit_electricity_before').value = reading.electricity_before;
+                document.getElementById('edit_electricity_after').value = reading.electricity_after;
+                document.getElementById('edit_water_before').value = reading.water_before;
+                document.getElementById('edit_water_after').value = reading.water_after;
+                document.getElementById('editReadingModal').style.display = 'block';
+            } else {
+                alert('获取读数失败');
+            }
+        })
+        .catch(error => {
+            console.error('获取读数错误:', error);
+            alert('获取读数失败');
+        });
+}
+
+// 删除电表水表读数
+function deleteReading(readingId) {
+    if (confirm('确定要删除这条读数记录吗？')) {
+        fetch(`/rooms/meter-readings/${readingId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('删除读数错误:', error);
+            alert('删除读数失败');
+        });
+    }
+}
+
+// 获取单个读数详情
+function getReading(readingId) {
+    return fetch(`/rooms/meter-readings/${readingId}`)
+        .then(response => response.json());
+}
+
+// 关闭编辑读数模态框
+function closeEditReadingModal() {
+    document.getElementById('editReadingModal').style.display = 'none';
+    document.getElementById('editReadingForm').reset();
+}
+
+// 编辑读数表单提交
+if (document.getElementById('editReadingForm')) {
+    document.getElementById('editReadingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            reading_date: document.getElementById('edit_reading_date').value,
+            electricity_before: document.getElementById('edit_electricity_before').value,
+            electricity_after: document.getElementById('edit_electricity_after').value,
+            water_before: document.getElementById('edit_water_before').value,
+            water_after: document.getElementById('edit_water_after').value
+        };
+
+        const readingId = document.getElementById('edit_reading_id').value;
+
+        fetch(`/rooms/meter-readings/${readingId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                closeEditReadingModal();
+                window.location.reload();
+            } else {
+                alert(data.message || '更新失败');
+            }
+        })
+        .catch(error => {
+            console.error('更新读数错误:', error);
+            alert('更新读数失败，请重试');
+        });
+    });
+}
+
 // 支付收据
 function payReceipt(receiptId) {
     if (confirm('确定要支付这张收据吗？')) {

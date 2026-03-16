@@ -208,21 +208,26 @@ app.get('/rooms/:id', (req, res) => {
 
     db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
         if (err) {
-            console.error('获取房间详情错误:', err);
-            return res.status(500).send('服务器错误');
+            console.error('获取房间信息错误:', err);
+            return res.status(500).json({ success: false, message: '服务器错误' });
         }
 
         if (!room) {
-            return res.status(404).send('房间不存在');
+            return res.status(404).json({ success: false, message: '房间不存在' });
         }
 
-        db.all('SELECT * FROM meter_readings WHERE room_id = ? ORDER BY reading_date DESC', [roomId], (err, readings) => {
-            if (err) {
-                console.error('获取读数历史错误:', err);
-                return res.status(500).send('服务器错误');
+        res.json({
+            success: true,
+            room: {
+                id: room.id,
+                room_number: room.room_number,
+                monthly_rent: room.monthly_rent,
+                tax_rate: room.tax_rate,
+                electricity_rate: room.electricity_rate,
+                water_rate: room.water_rate,
+                housekeeping_fee: room.housekeeping_fee,
+                internet_fee: room.internet_fee
             }
-
-            res.render('room-detail', { room, readings, username: req.session.username });
         });
     });
 });
@@ -265,6 +270,137 @@ app.post('/rooms/:id/delete', (req, res) => {
         }
 
         res.json({ success: true, message: '删除成功' });
+    });
+});
+
+// 电表水表读数管理
+app.get('/rooms/:id/meter-readings', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const roomId = req.params.id;
+
+    db.all('SELECT * FROM meter_readings WHERE room_id = ? ORDER BY reading_date DESC', [roomId], (err, readings) => {
+        if (err) {
+            console.error('获取读数记录错误:', err);
+            return res.status(500).json({ success: false, message: '服务器错误' });
+        }
+
+        res.json({
+            success: true,
+            readings: readings
+        });
+    });
+});
+
+// 添加/更新电表水表读数记录
+app.post('/rooms/:id/meter-readings', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const roomId = req.params.id;
+    const { reading_date, electricity_before, electricity_after, water_before, water_after } = req.body;
+
+    // 检查房间是否存在
+    db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
+        if (err) {
+            console.error('检查房间错误:', err);
+            return res.status(500).json({ success: false, message: '服务器错误' });
+        }
+
+        if (!room) {
+            return res.status(404).json({ success: false, message: '房间不存在' });
+        }
+
+        // 检查是否已存在该日期的读数
+        db.get('SELECT * FROM meter_readings WHERE room_id = ? AND reading_date = ?', [roomId, reading_date], (err, existing) => {
+            if (err) {
+                console.error('检查读数错误:', err);
+                return res.status(500).json({ success: false, message: '服务器错误' });
+            }
+
+            if (existing) {
+                // 更新现有读数
+                db.run(
+                    'UPDATE meter_readings SET electricity_before = ?, electricity_after = ?, water_before = ?, water_after = ? WHERE id = ?',
+                    [electricity_before, electricity_after, water_before, water_after, existing.id],
+                    (err) => {
+                        if (err) {
+                            console.error('更新读数错误:', err);
+                            return res.status(500).json({ success: false, message: '更新失败' });
+                        }
+
+                        res.json({ success: true, message: '更新成功' });
+                    }
+                );
+            } else {
+                // 添加新读数
+                db.run(
+                    'INSERT INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after) VALUES (?, ?, ?, ?, ?, ?)',
+                    [roomId, reading_date, electricity_before, electricity_after, water_before, water_after],
+                    (err) => {
+                        if (err) {
+                            console.error('添加读数错误:', err);
+                            return res.status(500).json({ success: false, message: '添加失败' });
+                        }
+
+                        res.json({ success: true, message: '添加成功' });
+                    }
+                );
+            }
+        });
+    });
+});
+
+// 删除电表水表读数记录
+app.delete('/rooms/:id/meter-readings/:readingId', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const { id, readingId } = req.params;
+
+    db.run('DELETE FROM meter_readings WHERE id = ?', [readingId], (err) => {
+        if (err) {
+            console.error('删除读数错误:', err);
+            return res.status(500).json({ success: false, message: '删除失败' });
+        }
+
+        res.json({ success: true, message: '删除成功' });
+    });
+});
+
+// 获取单个电表水表读数记录
+app.get('/rooms/meter-readings/:readingId', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const readingId = req.params.readingId;
+
+    db.get('SELECT * FROM meter_readings WHERE id = ?', [readingId], (err, reading) => {
+        if (err) {
+            console.error('获取读数错误:', err);
+            return res.status(500).json({ success: false, message: '服务器错误' });
+        }
+
+        if (!reading) {
+            return res.status(404).json({ success: false, message: '读数不存在' });
+        }
+
+        res.json({
+            success: true,
+            reading: {
+                id: reading.id,
+                reading_date: reading.reading_date,
+                electricity_before: reading.electricity_before,
+                electricity_after: reading.electricity_after,
+                water_before: reading.water_before,
+                water_after: reading.water_after
+            }
+        });
     });
 });
 
