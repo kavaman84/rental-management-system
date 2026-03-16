@@ -310,6 +310,8 @@ function updateMeterReadings() {
 
 // 编辑电表水表读数
 function editReading(readingId) {
+    console.log('开始编辑读数，ID:', readingId);
+
     // 获取房间ID
     const row = document.querySelector(`tr[data-reading-id="${readingId}"]`);
     const roomId = row ? row.getAttribute('data-room-id') : null;
@@ -319,16 +321,30 @@ function editReading(readingId) {
         return;
     }
 
+    console.log('房间ID:', roomId);
+
     fetch(`/rooms/${roomId}/meter-readings/${readingId}`)
         .then(response => response.json())
         .then(reading => {
+            console.log('获取到的读数数据:', reading);
+
             if (reading.success) {
+                // 检查 reading.reading 是否存在
+                if (!reading.reading) {
+                    alert('获取读数失败：数据格式错误');
+                    return;
+                }
+
+                console.log('填充表单数据:', reading.reading);
+
                 document.getElementById('edit_reading_id').value = reading.reading.id;
                 document.getElementById('edit_reading_date').value = reading.reading.reading_date;
                 document.getElementById('edit_electricity_before').value = reading.reading.electricity_before;
                 document.getElementById('edit_electricity_after').value = reading.reading.electricity_after;
                 document.getElementById('edit_water_before').value = reading.reading.water_before;
                 document.getElementById('edit_water_after').value = reading.reading.water_after;
+
+                console.log('显示编辑模态框');
                 document.getElementById('editReadingModal').style.display = 'block';
             } else {
                 alert(reading.message || '获取读数失败');
