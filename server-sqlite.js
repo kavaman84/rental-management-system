@@ -3,7 +3,7 @@ const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const path = require('path');
 const session = require('express-session');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 const app = express();
 const PORT = 4000;
 
@@ -11,12 +11,12 @@ const PORT = 4000;
 const db = new sqlite3.Database('./rental_system.db');
 
 // 邮件配置（需要根据实际情况修改）
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // 或其他SMTP服务器
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER || 'your-email@gmail.com',
+// const transporter = nodemailer.createTransport({
+// host: 'smtp.gmail.com', // 或其他SMTP服务器
+// port: 587,
+// secure: false,
+// auth: {
+// user: process.env.EMAIL_USER || 'your-email@gmail.com',
         pass: process.env.EMAIL_PASS || 'your-email-password'
     }
 });
@@ -744,252 +744,251 @@ app.post('/receipts/:id/pay', (req, res) => {
                 }
 
                 // 发送邮件通知
-                const mailOptions = {
-                    from: process.env.EMAIL_USER || 'rental-system@example.com',
-                    to: receipt.email || 'tenant@example.com', // 优先使用房客邮箱，否则使用默认
-                    subject: `房租收据支付通知 - ${receipt.room_number} - ${receipt.receipt_month}`,
-                    html: `
-                        <h2>房租收据支付成功</h2>
-                        <p>尊敬的房客，您好！</p>
-                        <p>您的收据已成功支付：</p>
-                        <ul>
-                            <li>房号：${receipt.room_number}</li>
-                            <li>收据月份：${receipt.receipt_month}</li>
-                            <li>月租金：¥${receipt.monthly_rent.toFixed(2)}</li>
-                            <li>税费：¥${receipt.tax_amount.toFixed(2)}</li>
-                            <li>电费：¥${receipt.electricity_amount.toFixed(2)} (${receipt.electricity_consumption}度)</li>
-                            <li>水费：¥${receipt.water_amount.toFixed(2)} (${receipt.water_consumption}吨)</li>
-                            <li><strong>应收总额：¥${receipt.total_amount.toFixed(2)}</strong></li>
-                        </ul>
-                        <p>支付状态：<span style="color: green;">已支付</span></p>
-                        <p>支付时间：${new Date().toLocaleString('zh-CN')}</p>
+//                 const mailOptions = {
+//                     from: process.env.EMAIL_USER || 'rental-system@example.com',
+//                     to: receipt.email || 'tenant@example.com', // 优先使用房客邮箱，否则使用默认
+//                     subject: `房租收据支付通知 - ${receipt.room_number} - ${receipt.receipt_month}`,
+//                     html: `
+//                         <h2>房租收据支付成功</h2>
+//                         <p>尊敬的房客，您好！</p>
+//                         <p>您的收据已成功支付：</p>
+//                         <ul>
+//                             <li>房号：${receipt.room_number}</li>
+//                             <li>收据月份：${receipt.receipt_month}</li>
+//                             <li>月租金：¥${receipt.monthly_rent.toFixed(2)}</li>
+//                             <li>税费：¥${receipt.tax_amount.toFixed(2)}</li>
+//                             <li>电费：¥${receipt.electricity_amount.toFixed(2)} (${receipt.electricity_consumption}度)</li>
+//                             <li>水费：¥${receipt.water_amount.toFixed(2)} (${receipt.water_consumption}吨)</li>
+//                             <li><strong>应收总额：¥${receipt.total_amount.toFixed(2)}</strong></li>
+//                         </ul>
+//                         <p>支付状态：<span style="color: green;">已支付</span></p>
+//                         <p>支付时间：${new Date().toLocaleString('zh-CN')}</p>
                         <p>如有疑问，请联系管理员。</p>
                         <hr>
                         <p style="font-size: 12px; color: #999;">此邮件由出租屋租赁管理系统自动发送，请勿回复。</p>
                     `
-                };
+// };
 
                 // 发送邮件
-                transporter.sendMail(mailOptions, (mailErr, info) => {
-                    if (mailErr) {
-                        console.error('发送邮件错误:', mailErr);
-                        // 即使邮件发送失败，也返回支付成功
-                        return res.json({
-                            success: true,
-                            message: '支付成功',
-                            notificationSent: false,
-                            error: '邮件发送失败，请检查配置'
-                        });
-                    }
-
-                    console.log('邮件发送成功:', info.messageId);
-                    res.json({
-                        success: true,
-                        message: '支付成功',
-                        notificationSent: true,
-                        notificationId: info.messageId
-                    });
-                });
-            });
-        }
-    );
-});
-
-// 删除收据
-app.post('/receipts/:id/delete', (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/login');
-    }
-
-    const receiptId = req.params.id;
-
-    db.run('DELETE FROM receipts WHERE id = ?', [receiptId], (err) => {
-        if (err) {
-            console.error('删除收据错误:', err);
-            return res.status(500).json({ success: false, message: '删除失败' });
-        }
-
-        res.json({ success: true, message: '删除成功' });
-    });
-});
-
-// 获取上月读数（用于修改收据时自动填充）
-app.get('/receipts/meter-readings/:roomId/:receiptMonth', (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/login');
-    }
-
-    const { roomId, receiptMonth } = req.params;
-
-    db.get(
-        `SELECT room_number,
-                (SELECT electricity_after FROM meter_readings
-                 WHERE room_id = ? AND reading_date < ?
-                 ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
-                (SELECT water_after FROM meter_readings
-                 WHERE room_id = ? AND reading_date < ?
-                 ORDER BY reading_date DESC LIMIT 1) AS water_before
-         FROM rooms
-         WHERE id = ?`,
-        [roomId, receiptMonth, roomId, receiptMonth, roomId],
-        (err, data) => {
-            if (err) {
-                console.error('获取上月读数错误:', err);
-                // 返回默认值0，允许用户手动填写
-                return res.json({
-                    success: true,
-                    electricity_before: 0,
-                    water_before: 0,
-                    message: '未找到上月读数，使用默认值0'
-                });
-            }
-
-            if (!data) {
-                return res.json({
-                    success: true,
-                    electricity_before: 0,
-                    water_before: 0,
-                    message: '未找到房间信息，使用默认值0'
-                });
-            }
-
-            res.json({
-                success: true,
-                electricity_before: data.electricity_before || 0,
-                water_before: data.water_before || 0,
-                room_number: data.room_number
-            });
-        }
-    );
-});
-
-// 获取收据详情（用于修改）
-app.get('/receipts/:id', (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/login');
-    }
-
-    const receiptId = req.params.id;
-
-    db.get(
-        `SELECT r.*, room_number,
-                (SELECT electricity_after FROM meter_readings
-                 WHERE room_id = r.room_id AND reading_date < r.receipt_month
-                 ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
-                (SELECT water_after FROM meter_readings
-                 WHERE room_id = r.room_id AND reading_date < r.receipt_month
-                 ORDER BY reading_date DESC LIMIT 1) AS water_before,
-                (SELECT electricity_after FROM meter_readings
-                 WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS electricity_after,
-                (SELECT water_after FROM meter_readings
-                 WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS water_after
-         FROM receipts r
-         JOIN rooms ON r.room_id = rooms.id
-         WHERE r.id = ?`,
-        [receiptId],
-        (err, receipt) => {
-            if (err) {
-                console.error('获取收据详情错误:', err);
-                return res.status(500).send('服务器错误');
-            }
-
-            if (!receipt) {
-                return res.status(404).send('收据不存在');
-            }
-
-            res.json(receipt);
-        }
-    );
-});
-
-// 更新收据
-app.post('/receipts/:id/update', (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/login');
-    }
-
-    const receiptId = req.params.id;
-    const { receipt_month, electricity_before, electricity_after, water_before, water_after } = req.body;
-
-    db.run(
-        `UPDATE receipts SET
-            receipt_month = ?,
-            electricity_before = ?,
-            electricity_after = ?,
-            water_before = ?,
-            water_after = ?
-         WHERE id = ?`,
-        [receipt_month, electricity_before, electricity_after, water_before, water_after, receiptId],
-        (err) => {
-            if (err) {
-                console.error('更新收据错误:', err);
-                return res.status(500).json({ success: false, message: '更新失败' });
-            }
-
-            res.json({ success: true, message: '更新成功' });
-        }
-    );
-});
-
-// 获取收据详情页面
-app.get('/receipts/:id/detail', (req, res) => {
-    if (!req.session.adminId) {
-        return res.redirect('/login');
-    }
-
-    const receiptId = req.params.id;
-
-    db.get(
-        `SELECT r.*, room_number,
-                (SELECT electricity_after FROM meter_readings
-                 WHERE room_id = r.room_id AND reading_date < r.receipt_month
-                 ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
-                (SELECT water_after FROM meter_readings
-                 WHERE room_id = r.room_id AND reading_date < r.receipt_month
-                 ORDER BY reading_date DESC LIMIT 1) AS water_before,
-                (SELECT electricity_after FROM meter_readings
-                 WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS electricity_after,
-                (SELECT water_after FROM meter_readings
-                 WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS water_after
-         FROM receipts r
-         JOIN rooms ON r.room_id = rooms.id
-         WHERE r.id = ?`,
-        [receiptId],
-        (err, receipt) => {
-            if (err) {
-                console.error('获取收据详情错误:', err);
-                return res.status(500).send('服务器错误');
-            }
-
-            if (!receipt) {
-                return res.status(404).send('收据不存在');
-            }
-
-            res.render('receipt-detail', {
-                receipt,
-                username: req.session.username,
-                room: receipt
-            });
-        }
-    );
-});
-
-// 登出
-app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/login');
-});
-
-// 404
-app.use((req, res) => {
-    res.status(404).render('404');
-});
-
-// 启动服务器
-app.listen(PORT, () => {
-    console.log(`================================`);
-    console.log(`服务器运行在 http://localhost:${PORT}`);
-    console.log(`================================`);
-    console.log(`管理员账号: admin / admin123`);
-    console.log(`================================`);
-});
+// //                 transporter.sendMail(mailOptions, (mailErr, info) => {
+// // if (mailErr) {
+// // console.error('发送邮件错误:', mailErr);
+// // // 即使邮件发送失败，也返回支付成功
+// // return res.json({
+// // success: true,
+// // message: '支付成功',
+// // notificationSent: false,
+// // error: '邮件发送失败，请检查配置'
+// // });
+// // }
+// // // console.log('邮件发送成功:', info.messageId);
+// // res.json({
+// // success: true,
+// // message: '支付成功',
+// // notificationSent: true,
+// // notificationId: info.messageId
+// // });
+// // });
+//             });
+//         }
+//     );
+// });
+// 
+// // 删除收据
+// app.post('/receipts/:id/delete', (req, res) => {
+//     if (!req.session.adminId) {
+//         return res.redirect('/login');
+//     }
+// 
+//     const receiptId = req.params.id;
+// 
+//     db.run('DELETE FROM receipts WHERE id = ?', [receiptId], (err) => {
+//         if (err) {
+//             console.error('删除收据错误:', err);
+//             return res.status(500).json({ success: false, message: '删除失败' });
+//         }
+// 
+//         res.json({ success: true, message: '删除成功' });
+//     });
+// });
+// 
+// // 获取上月读数（用于修改收据时自动填充）
+// app.get('/receipts/meter-readings/:roomId/:receiptMonth', (req, res) => {
+//     if (!req.session.adminId) {
+//         return res.redirect('/login');
+//     }
+// 
+//     const { roomId, receiptMonth } = req.params;
+// 
+//     db.get(
+//         `SELECT room_number,
+//                 (SELECT electricity_after FROM meter_readings
+//                  WHERE room_id = ? AND reading_date < ?
+//                  ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
+//                 (SELECT water_after FROM meter_readings
+//                  WHERE room_id = ? AND reading_date < ?
+//                  ORDER BY reading_date DESC LIMIT 1) AS water_before
+//          FROM rooms
+//          WHERE id = ?`,
+//         [roomId, receiptMonth, roomId, receiptMonth, roomId],
+//         (err, data) => {
+//             if (err) {
+//                 console.error('获取上月读数错误:', err);
+//                 // 返回默认值0，允许用户手动填写
+//                 return res.json({
+//                     success: true,
+//                     electricity_before: 0,
+//                     water_before: 0,
+//                     message: '未找到上月读数，使用默认值0'
+//                 });
+//             }
+// 
+//             if (!data) {
+//                 return res.json({
+//                     success: true,
+//                     electricity_before: 0,
+//                     water_before: 0,
+//                     message: '未找到房间信息，使用默认值0'
+//                 });
+//             }
+// 
+//             res.json({
+//                 success: true,
+//                 electricity_before: data.electricity_before || 0,
+//                 water_before: data.water_before || 0,
+//                 room_number: data.room_number
+//             });
+//         }
+//     );
+// });
+// 
+// // 获取收据详情（用于修改）
+// app.get('/receipts/:id', (req, res) => {
+//     if (!req.session.adminId) {
+//         return res.redirect('/login');
+//     }
+// 
+//     const receiptId = req.params.id;
+// 
+//     db.get(
+//         `SELECT r.*, room_number,
+//                 (SELECT electricity_after FROM meter_readings
+//                  WHERE room_id = r.room_id AND reading_date < r.receipt_month
+//                  ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
+//                 (SELECT water_after FROM meter_readings
+//                  WHERE room_id = r.room_id AND reading_date < r.receipt_month
+//                  ORDER BY reading_date DESC LIMIT 1) AS water_before,
+//                 (SELECT electricity_after FROM meter_readings
+//                  WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS electricity_after,
+//                 (SELECT water_after FROM meter_readings
+//                  WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS water_after
+//          FROM receipts r
+//          JOIN rooms ON r.room_id = rooms.id
+//          WHERE r.id = ?`,
+//         [receiptId],
+//         (err, receipt) => {
+//             if (err) {
+//                 console.error('获取收据详情错误:', err);
+//                 return res.status(500).send('服务器错误');
+//             }
+// 
+//             if (!receipt) {
+//                 return res.status(404).send('收据不存在');
+//             }
+// 
+//             res.json(receipt);
+//         }
+//     );
+// });
+// 
+// // 更新收据
+// app.post('/receipts/:id/update', (req, res) => {
+//     if (!req.session.adminId) {
+//         return res.redirect('/login');
+//     }
+// 
+//     const receiptId = req.params.id;
+//     const { receipt_month, electricity_before, electricity_after, water_before, water_after } = req.body;
+// 
+//     db.run(
+//         `UPDATE receipts SET
+//             receipt_month = ?,
+//             electricity_before = ?,
+//             electricity_after = ?,
+//             water_before = ?,
+//             water_after = ?
+//          WHERE id = ?`,
+//         [receipt_month, electricity_before, electricity_after, water_before, water_after, receiptId],
+//         (err) => {
+//             if (err) {
+//                 console.error('更新收据错误:', err);
+//                 return res.status(500).json({ success: false, message: '更新失败' });
+//             }
+// 
+//             res.json({ success: true, message: '更新成功' });
+//         }
+//     );
+// });
+// 
+// // 获取收据详情页面
+// app.get('/receipts/:id/detail', (req, res) => {
+//     if (!req.session.adminId) {
+//         return res.redirect('/login');
+//     }
+// 
+//     const receiptId = req.params.id;
+// 
+//     db.get(
+//         `SELECT r.*, room_number,
+//                 (SELECT electricity_after FROM meter_readings
+//                  WHERE room_id = r.room_id AND reading_date < r.receipt_month
+//                  ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
+//                 (SELECT water_after FROM meter_readings
+//                  WHERE room_id = r.room_id AND reading_date < r.receipt_month
+//                  ORDER BY reading_date DESC LIMIT 1) AS water_before,
+//                 (SELECT electricity_after FROM meter_readings
+//                  WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS electricity_after,
+//                 (SELECT water_after FROM meter_readings
+//                  WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS water_after
+//          FROM receipts r
+//          JOIN rooms ON r.room_id = rooms.id
+//          WHERE r.id = ?`,
+//         [receiptId],
+//         (err, receipt) => {
+//             if (err) {
+//                 console.error('获取收据详情错误:', err);
+//                 return res.status(500).send('服务器错误');
+//             }
+// 
+//             if (!receipt) {
+//                 return res.status(404).send('收据不存在');
+//             }
+// 
+//             res.render('receipt-detail', {
+//                 receipt,
+//                 username: req.session.username,
+//                 room: receipt
+//             });
+//         }
+//     );
+// });
+// 
+// // 登出
+// app.get('/logout', (req, res) => {
+//     req.session.destroy();
+//     res.redirect('/login');
+// });
+// 
+// // 404
+// app.use((req, res) => {
+//     res.status(404).render('404');
+// });
+// 
+// // 启动服务器
+// app.listen(PORT, () => {
+//     console.log(`================================`);
+//     console.log(`服务器运行在 http://localhost:${PORT}`);
+//     console.log(`================================`);
+//     console.log(`管理员账号: admin / admin123`);
+//     console.log(`================================`);
+// });
