@@ -3,11 +3,23 @@ const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const path = require('path');
 const session = require('express-session');
+const nodemailer = require('nodemailer');
 const app = express();
 const PORT = 4000;
 
 // 数据库连接
 const db = new sqlite3.Database('./rental_system.db');
+
+// 邮件配置（需要根据实际情况修改）
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com', // 或其他SMTP服务器
+    port: 587,
+    secure: false,
+    auth: {
+        user: process.env.EMAIL_USER || 'your-email@gmail.com',
+        pass: process.env.EMAIL_PASS || 'your-email-password'
+    }
+});
 
 // 初始化数据库
 db.serialize(() => {
@@ -707,14 +719,80 @@ app.post('/receipts/:id/pay', (req, res) => {
 
     const receiptId = req.params.id;
 
-    db.run('UPDATE receipts SET status = "paid" WHERE id = ?', [receiptId], (err) => {
-        if (err) {
-            console.error('更新收据状态错误:', err);
-            return res.status(500).json({ success: false, message: '更新失败' });
-        }
+    // 获取收据信息
+    db.get(
+        `SELECT r.*, room_number, username, email FROM receipts r
+         JOIN rooms ON r.room_id = rooms.id
+         LEFT JOIN admins ON r.created_by = admins.id
+         WHERE r.id = ?`,
+        [receiptId],
+        (err, receipt) => {
+            if (err) {
+                console.error('获取收据信息错误:', err);
+                return res.status(500).json({ success: false, message: '更新失败' });
+            }
 
-        res.json({ success: true, message: '支付成功' });
-    });
+            if (!receipt) {
+                return res.status(404).json({ success: false, message: '收据不存在' });
+            }
+
+            // 更新收据状态
+            db.run('UPDATE receipts SET status = "paid", paid_at = CURRENT_TIMESTAMP WHERE id = ?', [receiptId], (err) => {
+                if (err) {
+                    console.error('更新收据状态错误:', err);
+                    return res.status(500).json({ success: false, message: '更新失败' });
+                }
+
+                // 发送邮件通知
+                const mailOptions = {
+                    from: process.env.EMAIL_USER || 'rental-system@example.com',
+                    to: receipt.email || 'tenant@example.com', // 优先使用房客邮箱，否则使用默认
+                    subject: `房租收据支付通知 - ${receipt.room_number} - ${receipt.receipt_month}`,
+                    html: `
+                        <h2>房租收据支付成功</h2>
+                        <p>尊敬的房客，您好！</p>
+                        <p>您的收据已成功支付：</p>
+                        <ul>
+                            <li>房号：${receipt.room_number}</li>
+                            <li>收据月份：${receipt.receipt_month}</li>
+                            <li>月租金：¥${receipt.monthly_rent.toFixed(2)}</li>
+                            <li>税费：¥${receipt.tax_amount.toFixed(2)}</li>
+                            <li>电费：¥${receipt.electricity_amount.toFixed(2)} (${receipt.electricity_consumption}度)</li>
+                            <li>水费：¥${receipt.water_amount.toFixed(2)} (${receipt.water_consumption}吨)</li>
+                            <li><strong>应收总额：¥${receipt.total_amount.toFixed(2)}</strong></li>
+                        </ul>
+                        <p>支付状态：<span style="color: green;">已支付</span></p>
+                        <p>支付时间：${new Date().toLocaleString('zh-CN')}</p>
+                        <p>如有疑问，请联系管理员。</p>
+                        <hr>
+                        <p style="font-size: 12px; color: #999;">此邮件由出租屋租赁管理系统自动发送，请勿回复。</p>
+                    `
+                };
+
+                // 发送邮件
+                transporter.sendMail(mailOptions, (mailErr, info) => {
+                    if (mailErr) {
+                        console.error('发送邮件错误:', mailErr);
+                        // 即使邮件发送失败，也返回支付成功
+                        return res.json({
+                            success: true,
+                            message: '支付成功',
+                            notificationSent: false,
+                            error: '邮件发送失败，请检查配置'
+                        });
+                    }
+
+                    console.log('邮件发送成功:', info.messageId);
+                    res.json({
+                        success: true,
+                        message: '支付成功',
+                        notificationSent: true,
+                        notificationId: info.messageId
+                    });
+                });
+            });
+        }
+    );
 });
 
 // 删除收据

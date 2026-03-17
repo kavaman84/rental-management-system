@@ -362,6 +362,24 @@ app.post('/receipts/:id/pay', (req, res) => {
     );
 });
 
+// 删除收据
+app.post('/receipts/:id/delete', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const receiptId = req.params.id;
+
+    db.query('DELETE FROM receipts WHERE id = ?', [receiptId], (err) => {
+        if (err) {
+            console.error('删除收据错误:', err);
+            return res.status(500).json({ success: false, message: '删除失败' });
+        }
+
+        res.json({ success: true, message: '删除成功' });
+    });
+});
+
 // 登出
 app.get('/logout', (req, res) => {
     req.session.destroy();

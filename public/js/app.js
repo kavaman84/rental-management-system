@@ -327,15 +327,23 @@ function editReading(readingId) {
         .then(response => response.json())
         .then(reading => {
             console.log('获取到的读数数据:', reading);
+            console.log('读取的数据类型:', typeof reading);
+            console.log('reading.success:', reading.success);
 
             if (reading.success) {
+                console.log('reading 对象:', reading);
+
                 // 检查 reading.reading 是否存在
                 if (!reading.reading) {
-                    alert('获取读数失败：数据格式错误');
+                    alert('获取读数失败：数据格式错误，reading.reading 为空');
                     return;
                 }
 
                 console.log('填充表单数据:', reading.reading);
+
+                // 检查 reading.reading 的各个属性
+                console.log('reading.reading.id:', reading.reading.id);
+                console.log('reading.reading.reading_date:', reading.reading.reading_date);
 
                 document.getElementById('edit_reading_id').value = reading.reading.id;
                 document.getElementById('edit_reading_date').value = reading.reading.reading_date;
@@ -624,15 +632,17 @@ function deleteReceipt(receiptId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                window.location.reload();
+                showNotification(data.message, 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
                 alert(data.message);
             }
         })
         .catch(error => {
             console.error('删除收据错误:', error);
-            alert('删除失败，请重试');
+            showNotification('删除失败，请重试', 'error');
         });
     }
 }
@@ -649,15 +659,88 @@ function payReceipt(receiptId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                window.location.reload();
+                // 显示通知
+                showNotification(data.message, 'success');
+                // 延迟刷新页面，让用户看到通知
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
                 alert(data.message);
             }
         })
         .catch(error => {
             console.error('支付收据错误:', error);
-            alert('支付失败，请重试');
+            showNotification('支付失败，请重试', 'error');
         });
     }
+}
+
+// 显示通知
+function showNotification(message, type = 'info') {
+    // 创建通知元素
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+
+    // 添加样式
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+        max-width: 300px;
+    `;
+
+    // 根据类型设置颜色
+    if (type === 'success') {
+        notification.style.backgroundColor = '#4CAF50';
+    } else if (type === 'error') {
+        notification.style.backgroundColor = '#F44336';
+    } else {
+        notification.style.backgroundColor = '#2196F3';
+    }
+
+    // 添加动画样式
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 添加到页面
+    document.body.appendChild(notification);
+
+    // 3秒后自动消失
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
