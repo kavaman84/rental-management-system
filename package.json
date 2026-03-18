@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server-sqlite.js",
-    "dev": "nodemon server-macos.js"
+    "dev": "nodemon server-sqlite.js"
   },
   "dependencies": {
     "body-parser": "^1.20.2",
