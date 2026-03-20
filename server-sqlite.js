@@ -17,9 +17,9 @@ const db = new sqlite3.Database('./rental_system.db');
 // secure: false,
 // auth: {
 // user: process.env.EMAIL_USER || 'your-email@gmail.com',
-        pass: process.env.EMAIL_PASS || 'your-email-password'
-    }
-});
+// pass: process.env.EMAIL_PASS || 'your-email-password'
+// }
+// });
 
 // 初始化数据库
 db.serialize(() => {
@@ -763,10 +763,10 @@ app.post('/receipts/:id/pay', (req, res) => {
 //                         </ul>
 //                         <p>支付状态：<span style="color: green;">已支付</span></p>
 //                         <p>支付时间：${new Date().toLocaleString('zh-CN')}</p>
-                        <p>如有疑问，请联系管理员。</p>
-                        <hr>
-                        <p style="font-size: 12px; color: #999;">此邮件由出租屋租赁管理系统自动发送，请勿回复。</p>
-                    `
+//                         <p>如有疑问，请联系管理员。</p>
+//                         <hr>
+//                         <p style="font-size: 12px; color: #999;">此邮件由出租屋租赁管理系统自动发送，请勿回复。</p>
+//                     `
 // };
 
                 // 发送邮件
