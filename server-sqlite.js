@@ -148,11 +148,19 @@ app.get('/dashboard', (req, res) => {
             db.get('SELECT COUNT(*) as unpaid FROM receipts WHERE status = "pending"', (err, result) => {
                 const unpaidCount = result.unpaid;
 
-                res.render('dashboard', {
-                    rooms,
-                    receiptStats,
-                    unpaidCount,
-                    username: req.session.username
+                db.all('SELECT r.*, room_number FROM receipts r JOIN rooms ON r.room_id = rooms.id ORDER BY r.receipt_month DESC, r.room_id ASC LIMIT 5', (err, receipts) => {
+                    if (err) {
+                        console.error('获取收据列表错误:', err);
+                        receipts = [];
+                    }
+
+                    res.render('dashboard', {
+                        rooms,
+                        receipts,
+                        receiptStats,
+                        unpaidCount,
+                        username: req.session.username
+                    });
                 });
             });
         });
