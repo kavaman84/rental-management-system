@@ -235,6 +235,24 @@ app.post('/rooms/:id/update', (req, res) => {
     );
 });
 
+// 删除房间
+app.post('/rooms/:id/delete', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const roomId = req.params.id;
+
+    db.run('DELETE FROM rooms WHERE id = ?', [roomId], (err) => {
+        if (err) {
+            console.error('删除房间错误:', err);
+            return res.status(500).json({ success: false, message: '删除失败' });
+        }
+
+        res.json({ success: true, message: '删除成功' });
+    });
+});
+
 // 收据管理
 app.get('/receipts', (req, res) => {
     if (!req.session.adminId) {
