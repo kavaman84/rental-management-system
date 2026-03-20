@@ -544,6 +544,55 @@ app.post('/receipts/:id/delete', (req, res) => {
     });
 });
 
+// 获取上月读数（用于生成收据时自动填充）
+app.get('/receipts/meter-readings/:roomId/:receiptMonth', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const { roomId, receiptMonth } = req.params;
+
+    db.get(
+        `SELECT room_number,
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = ? AND reading_date < ?
+                 ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = ? AND reading_date < ?
+                 ORDER BY reading_date DESC LIMIT 1) AS water_before
+         FROM rooms
+         WHERE id = ?`,
+        [roomId, receiptMonth, roomId, receiptMonth, roomId],
+        (err, data) => {
+            if (err) {
+                console.error('获取上月读数错误:', err);
+                return res.json({
+                    success: true,
+                    electricity_before: 0,
+                    water_before: 0,
+                    message: '未找到上月读数，使用默认值0'
+                });
+            }
+
+            if (!data) {
+                return res.json({
+                    success: true,
+                    electricity_before: 0,
+                    water_before: 0,
+                    message: '未找到房间信息，使用默认值0'
+                });
+            }
+
+            res.json({
+                success: true,
+                electricity_before: data.electricity_before || 0,
+                water_before: data.water_before || 0,
+                room_number: data.room_number
+            });
+        }
+    );
+});
+
 // 登出
 app.get('/logout', (req, res) => {
     req.session.destroy();
