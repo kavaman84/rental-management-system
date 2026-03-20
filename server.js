@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
 
 // 登录页面
 app.get('/login', (req, res) => {
-    res.render('login');
+    res.render('login', { error: null });
 });
 
 // 登录处理
