@@ -179,7 +179,7 @@ app.get('/rooms', (req, res) => {
             return res.status(500).send('服务器错误');
         }
 
-        res.render('rooms', { rooms });
+        res.render('rooms', { rooms, username: req.session.username });
     });
 });
 
