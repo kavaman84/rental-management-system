@@ -296,11 +296,19 @@ app.get('/receipts', (req, res) => {
                 const total = result.total;
                 const totalPages = Math.ceil(total / limit);
 
-                res.render('receipts', {
-                    receipts,
-                    currentPage: page,
-                    totalPages,
-                    username: req.session.username
+                db.all('SELECT * FROM rooms ORDER BY room_number', (err, rooms) => {
+                    if (err) {
+                        console.error('获取房间列表错误:', err);
+                        rooms = [];
+                    }
+
+                    res.render('receipts', {
+                        receipts,
+                        currentPage: page,
+                        totalPages,
+                        rooms,
+                        username: req.session.username
+                    });
                 });
             });
         }
