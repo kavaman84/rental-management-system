@@ -212,6 +212,40 @@ app.get('/rooms/:id', (req, res) => {
     });
 });
 
+// 获取房间数据（JSON格式，用于编辑）
+app.get('/rooms/:id/json', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const roomId = req.params.id;
+
+    db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
+        if (err) {
+            console.error('获取房间信息错误:', err);
+            return res.status(500).json({ success: false, message: '服务器错误' });
+        }
+
+        if (!room) {
+            return res.status(404).json({ success: false, message: '房间不存在' });
+        }
+
+        res.json({
+            success: true,
+            room: {
+                id: room.id,
+                room_number: room.room_number,
+                monthly_rent: room.monthly_rent,
+                tax_rate: room.tax_rate,
+                electricity_rate: room.electricity_rate,
+                water_rate: room.water_rate,
+                housekeeping_fee: room.housekeeping_fee,
+                internet_fee: room.internet_fee
+            }
+        });
+    });
+});
+
 // 更新房间信息
 app.post('/rooms/:id/update', (req, res) => {
     if (!req.session.adminId) {
