@@ -16,7 +16,6 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         room_number TEXT NOT NULL UNIQUE,
         monthly_rent REAL NOT NULL,
-        tax_rate REAL DEFAULT 0,
         electricity_rate REAL DEFAULT 0,
         water_rate REAL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -40,7 +39,6 @@ db.serialize(() => {
         room_id INTEGER NOT NULL,
         receipt_month TEXT NOT NULL,
         monthly_rent REAL NOT NULL,
-        tax_amount REAL NOT NULL,
         electricity_amount REAL NOT NULL,
         water_amount REAL NOT NULL,
         total_amount REAL NOT NULL,
@@ -363,12 +361,11 @@ app.post('/receipts/generate', (req, res) => {
                 }
 
                 const monthlyRent = parseFloat(room.monthly_rent);
-                const taxAmount = monthlyRent * parseFloat(room.tax_rate);
                 const electricityConsumption = Math.max(0, electricityAfter - electricityBefore);
                 const waterConsumption = Math.max(0, waterAfter - waterBefore);
                 const electricityAmount = electricityConsumption * parseFloat(room.electricity_rate);
                 const waterAmount = waterConsumption * parseFloat(room.water_rate);
-                const totalAmount = monthlyRent + taxAmount + electricityAmount + waterAmount;
+                const totalAmount = monthlyRent + electricityAmount + waterAmount;
 
                 db.get('SELECT * FROM receipts WHERE room_id = ? AND receipt_month = ?', [roomId, receiptMonth], (err, existingReceipts) => {
                     if (err) {
@@ -381,12 +378,11 @@ app.post('/receipts/generate', (req, res) => {
                     }
 
                     db.run(
-                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [
                             roomId,
                             receiptMonth,
                             monthlyRent,
-                            taxAmount,
                             electricityAmount,
                             waterAmount,
                             totalAmount,
@@ -407,7 +403,6 @@ app.post('/receipts/generate', (req, res) => {
                                     room_number: room.room_number,
                                     receipt_month: receiptMonth,
                                     monthly_rent: monthlyRent,
-                                    tax_amount: taxAmount,
                                     electricity_amount: electricityAmount,
                                     water_amount: waterAmount,
                                     total_amount: totalAmount,
