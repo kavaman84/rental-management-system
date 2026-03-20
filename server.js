@@ -382,7 +382,9 @@ app.post('/receipts/:id/delete', (req, res) => {
 
 // 登出
 app.get('/logout', (req, res) => {
-    req.session.destroy();
+    if (req.session) {
+        req.session.destroy();
+    }
     res.redirect('/login');
 });
 
