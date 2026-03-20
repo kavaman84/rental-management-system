@@ -480,6 +480,48 @@ app.post('/receipts/:id/pay', (req, res) => {
     });
 });
 
+// 获取收据详情页面
+app.get('/receipts/:id/detail', (req, res) => {
+    if (!req.session.adminId) {
+        return res.redirect('/login');
+    }
+
+    const receiptId = req.params.id;
+
+    db.get(
+        `SELECT r.*, room_number,
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = r.room_id AND reading_date < r.receipt_month
+                 ORDER BY reading_date DESC LIMIT 1) AS electricity_before,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = r.room_id AND reading_date < r.receipt_month
+                 ORDER BY reading_date DESC LIMIT 1) AS water_before,
+                (SELECT electricity_after FROM meter_readings
+                 WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS electricity_after,
+                (SELECT water_after FROM meter_readings
+                 WHERE room_id = r.room_id AND reading_date = r.receipt_month) AS water_after
+         FROM receipts r
+         JOIN rooms ON r.room_id = rooms.id
+         WHERE r.id = ?`,
+        [receiptId],
+        (err, receipt) => {
+            if (err) {
+                console.error('获取收据详情错误:', err);
+                return res.status(500).send('服务器错误');
+            }
+
+            if (!receipt) {
+                return res.status(404).send('收据不存在');
+            }
+
+            res.render('receipt-detail', {
+                receipt,
+                username: req.session.username
+            });
+        }
+    );
+});
+
 // 删除收据
 app.post('/receipts/:id/delete', (req, res) => {
     if (!req.session.adminId) {
