@@ -31,10 +31,9 @@ db.serialize(() => {
         const electricityAmount = electricityConsumption * parseFloat(room.electricity_rate || 0);
         const waterAmount = waterConsumption * parseFloat(room.water_rate || 0);
         const monthlyRent = parseFloat(room.monthly_rent);
-        const taxAmount = monthlyRent * parseFloat(room.tax_rate || 0);
         const housekeepingFee = parseFloat(room.housekeeping_fee) || 0;
         const internetFee = parseFloat(room.internet_fee) || 0;
-        const totalAmount = monthlyRent + taxAmount + electricityAmount + waterAmount + housekeepingFee + internetFee;
+        const totalAmount = monthlyRent + electricityAmount + waterAmount + housekeepingFee + internetFee;
 
         db.get('SELECT * FROM receipts WHERE room_id = ? AND receipt_month = ?', [reading.room_id, reading.reading_date], (err, existing) => {
           if (err) {
@@ -46,23 +45,16 @@ db.serialize(() => {
             console.log(`收据已存在: 房间 ${room.room_number} ${reading.reading_date}，跳过`);
           } else {
             db.run(
-              'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, housekeeping_fee, internet_fee, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
               [
                 reading.room_id,
                 reading.reading_date,
                 monthlyRent,
-                taxAmount,
                 electricityAmount,
                 waterAmount,
-                housekeepingFee,
-                internetFee,
                 totalAmount,
                 electricityConsumption,
                 waterConsumption,
-                reading.electricity_before,
-                reading.electricity_after,
-                reading.water_before,
-                reading.water_after,
                 'pending'
               ],
               function(err) {

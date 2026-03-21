@@ -273,12 +273,11 @@ app.post('/receipts/generate', (req, res) => {
 
                         // 计算费用
                         const monthlyRent = parseFloat(room.monthly_rent);
-                        const taxAmount = monthlyRent * parseFloat(room.tax_rate);
                         const electricityConsumption = Math.max(0, electricityAfter - electricityBefore);
                         const waterConsumption = Math.max(0, waterAfter - waterBefore);
                         const electricityAmount = electricityConsumption * parseFloat(room.electricity_rate);
                         const waterAmount = waterConsumption * parseFloat(room.water_rate);
-                        const totalAmount = monthlyRent + taxAmount + electricityAmount + waterAmount;
+                        const totalAmount = monthlyRent + electricityAmount + waterAmount;
 
                         // 检查是否已存在收据
                         db.query(
@@ -296,12 +295,11 @@ app.post('/receipts/generate', (req, res) => {
 
                                 // 插入收据
                                 db.query(
-                                    'INSERT INTO receipts (room_id, receipt_month, monthly_rent, tax_amount, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                                    'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                                     [
                                         roomId,
                                         receiptMonth,
                                         monthlyRent,
-                                        taxAmount,
                                         electricityAmount,
                                         waterAmount,
                                         totalAmount,
@@ -322,7 +320,6 @@ app.post('/receipts/generate', (req, res) => {
                                                 room_number: room.room_number,
                                                 receipt_month: receiptMonth,
                                                 monthly_rent: monthlyRent,
-                                                tax_amount: taxAmount,
                                                 electricity_amount: electricityAmount,
                                                 water_amount: waterAmount,
                                                 total_amount: totalAmount,
