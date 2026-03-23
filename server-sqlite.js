@@ -440,7 +440,6 @@ app.post('/receipts/generate', (req, res) => {
                             });
                         }
                     );
-                });
             });
         });
     });
