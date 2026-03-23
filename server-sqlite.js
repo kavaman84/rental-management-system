@@ -65,6 +65,10 @@ db.serialize(() => {
         total_amount REAL NOT NULL,
         electricity_consumption REAL,
         water_consumption REAL,
+        electricity_before REAL DEFAULT 0,
+        electricity_after REAL DEFAULT 0,
+        water_before REAL DEFAULT 0,
+        water_after REAL DEFAULT 0,
         status TEXT DEFAULT 'pending',
         receipt_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
@@ -432,6 +436,10 @@ app.post('/receipts/generate', (req, res) => {
                             totalAmount,
                             electricityConsumption,
                             waterConsumption,
+                            electricityBefore,
+                            electricityAfter,
+                            waterBefore,
+                            waterAfter,
                             'pending'
                         ],
                         (err) => {
