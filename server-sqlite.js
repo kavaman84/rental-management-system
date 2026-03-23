@@ -16,6 +16,17 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
+// 邮件配置（需要根据实际情况修改）
+// const transporter = nodemailer.createTransport({
+// host: 'smtp.gmail.com', // 或其他SMTP服务器
+// port: 587,
+// secure: false,
+// auth: {
+// user: process.env.EMAIL_USER || 'your-email@gmail.com',
+// pass: process.env.EMAIL_PASS || 'your-email-password'
+// }
+// });
+
 // 初始化数据库
 db.serialize(() => {
     // 创建表
@@ -389,8 +400,29 @@ app.post('/receipts/generate', (req, res) => {
                         return res.status(400).json({ success: false, message: '该月份的收据已存在' });
                     }
 
+                    console.log('准备插入收据数据:', {
+                        roomId,
+                        receiptMonth,
+                        electricityBefore,
+                        electricityAfter,
+                        waterBefore,
+                        waterAfter
+                    });
+
+                    // 保存电表水表读数到 meter_readings 表
                     db.run(
-                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'INSERT INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after) VALUES (?, ?, ?, ?, ?, ?)',
+                        [roomId, receiptMonth, electricityBefore, electricityAfter, waterBefore, waterAfter],
+                        (err) => {
+                            if (err) {
+                                console.error('保存读数错误:', err);
+                            }
+                        }
+                    );
+
+                    // 插入收据
+                    db.run(
+                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [
                             roomId,
                             receiptMonth,
