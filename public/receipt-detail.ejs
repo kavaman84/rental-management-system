@@ -212,13 +212,13 @@
                         <tr>
                             <td>电费</td>
                             <td><%= receipt.electricity_consumption.toFixed(2) %> 度</td>
-                            <td>¥<%= (room.electricity_rate || 0).toFixed(2) %>/度</td>
+                            <td>¥<%= (receipt.electricity_rate || 0).toFixed(2) %>/度</td>
                             <td>¥<%= (receipt.electricity_amount || 0).toFixed(2) %></td>
                         </tr>
                         <tr>
                             <td>水费</td>
                             <td><%= receipt.water_consumption.toFixed(2) %> 吨</td>
-                            <td>¥<%= (room.water_rate || 0).toFixed(2) %>/吨</td>
+                            <td>¥<%= (receipt.water_rate || 0).toFixed(2) %>/吨</td>
                             <td>¥<%= (receipt.water_amount || 0).toFixed(2) %></td>
                         </tr>
                         <tr>
