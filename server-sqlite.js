@@ -346,6 +346,10 @@ app.post('/receipts/generate', (req, res) => {
 
     const roomId = req.body.room_id;
     const receiptMonth = req.body.receipt_month;
+    const electricityBefore = parseFloat(req.body.electricity_before) || 0;
+    const electricityAfter = parseFloat(req.body.electricity_after) || 0;
+    const waterBefore = parseFloat(req.body.water_before) || 0;
+    const waterAfter = parseFloat(req.body.water_after) || 0;
 
     db.get('SELECT * FROM rooms WHERE id = ?', [roomId], (err, room) => {
         if (err) {
@@ -357,91 +361,63 @@ app.post('/receipts/generate', (req, res) => {
             return res.status(404).json({ success: false, message: '房间不存在' });
         }
 
-        db.get('SELECT * FROM meter_readings WHERE room_id = ? ORDER BY reading_date DESC LIMIT 1', [roomId], (err, readings) => {
+        const monthlyRent = parseFloat(room.monthly_rent);
+        const electricityConsumption = Math.max(0, electricityAfter - electricityBefore);
+        const waterConsumption = Math.max(0, waterAfter - waterBefore);
+        const electricityAmount = electricityConsumption * parseFloat(room.electricity_rate);
+        const waterAmount = waterConsumption * parseFloat(room.water_rate);
+        const housekeepingFee = parseFloat(room.housekeeping_fee) || 0;
+        const internetFee = parseFloat(room.internet_fee) || 0;
+        const totalAmount = monthlyRent + electricityAmount + waterAmount + housekeepingFee + internetFee;
+
+        db.get('SELECT * FROM receipts WHERE room_id = ? AND receipt_month = ?', [roomId, receiptMonth], (err, existingReceipts) => {
             if (err) {
-                console.error('获取读数错误:', err);
-                return res.status(500).json({ success: false, message: '获取读数失败' });
+                console.error('检查收据错误:', err);
+                return res.status(500).json({ success: false, message: '检查收据失败' });
             }
 
-            let electricityBefore = 0;
-            let waterBefore = 0;
-
-            if (readings) {
-                electricityBefore = readings.electricity_after;
-                waterBefore = readings.water_after;
+            if (existingReceipts) {
+                return res.status(400).json({ success: false, message: '该月份的收据已存在' });
             }
 
-            db.get('SELECT * FROM meter_readings WHERE room_id = ? AND reading_date = ?', [roomId, receiptMonth], (err, currentReadings) => {
-                if (err) {
-                    console.error('获取当前读数错误:', err);
-                    return res.status(500).json({ success: false, message: '获取当前读数失败' });
-                }
+            console.log('准备插入收据数据:', {
+                roomId,
+                receiptMonth,
+                electricityBefore,
+                electricityAfter,
+                waterBefore,
+                waterAfter
+            });
 
-                let electricityAfter = electricityBefore;
-                let waterAfter = waterBefore;
-
-                if (currentReadings) {
-                    electricityAfter = currentReadings.electricity_after;
-                    waterAfter = currentReadings.water_after;
-                }
-
-                const monthlyRent = parseFloat(room.monthly_rent);
-                const electricityConsumption = Math.max(0, electricityAfter - electricityBefore);
-                const waterConsumption = Math.max(0, waterAfter - waterBefore);
-                const electricityAmount = electricityConsumption * parseFloat(room.electricity_rate);
-                const waterAmount = waterConsumption * parseFloat(room.water_rate);
-                const housekeepingFee = parseFloat(room.housekeeping_fee) || 0;
-                const internetFee = parseFloat(room.internet_fee) || 0;
-                const totalAmount = monthlyRent + electricityAmount + waterAmount + housekeepingFee + internetFee;
-
-                db.get('SELECT * FROM receipts WHERE room_id = ? AND receipt_month = ?', [roomId, receiptMonth], (err, existingReceipts) => {
+            // 保存电表水表读数到 meter_readings 表
+            db.run(
+                'INSERT INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after) VALUES (?, ?, ?, ?, ?, ?)',
+                [roomId, receiptMonth, electricityBefore, electricityAfter, waterBefore, waterAfter],
+                (err) => {
                     if (err) {
-                        console.error('检查收据错误:', err);
-                        return res.status(500).json({ success: false, message: '检查收据失败' });
+                        console.error('保存读数错误:', err);
                     }
+                }
+            );
 
-                    if (existingReceipts) {
-                        return res.status(400).json({ success: false, message: '该月份的收据已存在' });
-                    }
-
-                    console.log('准备插入收据数据:', {
-                        roomId,
-                        receiptMonth,
-                        electricityBefore,
-                        electricityAfter,
-                        waterBefore,
-                        waterAfter
-                    });
-
-                    // 保存电表水表读数到 meter_readings 表
-                    db.run(
-                        'INSERT INTO meter_readings (room_id, reading_date, electricity_before, electricity_after, water_before, water_after) VALUES (?, ?, ?, ?, ?, ?)',
-                        [roomId, receiptMonth, electricityBefore, electricityAfter, waterBefore, waterAfter],
-                        (err) => {
-                            if (err) {
-                                console.error('保存读数错误:', err);
-                            }
-                        }
-                    );
-
-                    // 插入收据
-                    db.run(
-                        'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                        [
-                            roomId,
-                            receiptMonth,
-                            monthlyRent,
-                            electricityAmount,
-                            waterAmount,
-                            totalAmount,
-                            electricityConsumption,
-                            waterConsumption,
-                            electricityBefore,
-                            electricityAfter,
-                            waterBefore,
-                            waterAfter,
-                            'pending'
-                        ],
+            // 插入收据
+            db.run(
+                'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    roomId,
+                    receiptMonth,
+                    monthlyRent,
+                    electricityAmount,
+                    waterAmount,
+                    totalAmount,
+                    electricityConsumption,
+                    waterConsumption,
+                    electricityBefore,
+                    electricityAfter,
+                    waterBefore,
+                    waterAfter,
+                    'pending'
+                ],
                         (err) => {
                             if (err) {
                                 console.error('创建收据错误:', err);
