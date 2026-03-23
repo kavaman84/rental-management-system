@@ -84,16 +84,16 @@
                             <tr>
                                 <td><%= receipt.room_number %></td>
                                 <td><%= receipt.receipt_month %></td>
-                                <td>¥<%= receipt.monthly_rent.toFixed(2) %></td>
-                                <td><%= receipt.electricity_before ? receipt.electricity_before.toFixed(2) : '-' %></td>
-                                <td><%= receipt.electricity_after ? receipt.electricity_after.toFixed(2) : '-' %></td>
-                                <td>¥<%= receipt.electricity_amount.toFixed(2) %></td>
-                                <td><%= receipt.water_before ? receipt.water_before.toFixed(2) : '-' %></td>
-                                <td><%= receipt.water_after ? receipt.water_after.toFixed(2) : '-' %></td>
-                                <td>¥<%= receipt.water_amount.toFixed(2) %></td>
-                                <td>¥<%= receipt.housekeeping_fee ? receipt.housekeeping_fee.toFixed(2) : '0.00' %></td>
-                                <td>¥<%= receipt.internet_fee ? receipt.internet_fee.toFixed(2) : '0.00' %></td>
-                                <td class="total">¥<%= receipt.total_amount.toFixed(2) %></td>
+                                <td>¥<%= (parseFloat(receipt.monthly_rent) || 0).toFixed(2) %></td>
+                                <td><%= (parseFloat(receipt.electricity_before) || 0).toFixed(2) %></td>
+                                <td><%= (parseFloat(receipt.electricity_after) || 0).toFixed(2) %></td>
+                                <td>¥<%= (parseFloat(receipt.electricity_amount) || 0).toFixed(2) %></td>
+                                <td><%= (parseFloat(receipt.water_before) || 0).toFixed(2) %></td>
+                                <td><%= (parseFloat(receipt.water_after) || 0).toFixed(2) %></td>
+                                <td>¥<%= (parseFloat(receipt.water_amount) || 0).toFixed(2) %></td>
+                                <td>¥<%= (parseFloat(receipt.housekeeping_fee) || 0).toFixed(2) %></td>
+                                <td>¥<%= (parseFloat(receipt.internet_fee) || 0).toFixed(2) %></td>
+                                <td class="total">¥<%= (parseFloat(receipt.total_amount) || 0).toFixed(2) %></td>
                                 <td>
                                     <span class="status <%= receipt.status %>">
                                         <%= receipt.status === 'paid' ? '已支付' : '未支付' %>
