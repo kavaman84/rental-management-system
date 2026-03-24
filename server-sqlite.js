@@ -402,7 +402,7 @@ app.post('/receipts/generate', (req, res) => {
 
             // 插入收据
             db.run(
-                'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, housekeeping_fee, internet_fee, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     roomId,
                     receiptMonth,
@@ -416,6 +416,8 @@ app.post('/receipts/generate', (req, res) => {
                     electricityAfter,
                     waterBefore,
                     waterAfter,
+                    housekeepingFee,
+                    internetFee,
                     'pending'
                 ],
                         (err) => {
