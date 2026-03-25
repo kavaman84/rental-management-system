@@ -65,6 +65,8 @@ db.serialize(() => {
         total_amount REAL NOT NULL,
         electricity_consumption REAL,
         water_consumption REAL,
+        electricity_rate REAL DEFAULT 0,
+        water_rate REAL DEFAULT 0,
         electricity_before REAL DEFAULT 0,
         electricity_after REAL DEFAULT 0,
         water_before REAL DEFAULT 0,
@@ -402,7 +404,7 @@ app.post('/receipts/generate', (req, res) => {
 
             // 插入收据
             db.run(
-                'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, electricity_before, electricity_after, water_before, water_after, housekeeping_fee, internet_fee, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO receipts (room_id, receipt_month, monthly_rent, electricity_amount, water_amount, total_amount, electricity_consumption, water_consumption, electricity_rate, water_rate, electricity_before, electricity_after, water_before, water_after, housekeeping_fee, internet_fee, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     roomId,
                     receiptMonth,
@@ -412,6 +414,8 @@ app.post('/receipts/generate', (req, res) => {
                     totalAmount,
                     electricityConsumption,
                     waterConsumption,
+                    room.electricity_rate,
+                    room.water_rate,
                     electricityBefore,
                     electricityAfter,
                     waterBefore,
